@@ -42,6 +42,7 @@ dependencies:
   flutter_svg: ^2.0.17
 
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -68,8 +69,6 @@ flutter:
     - lib/assets/icons/logo_small_icon.svg
     - lib/assets/icons/transaction_notification_icon.svg
     - lib/assets/icons/update_notification_icon.svg
-
-
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

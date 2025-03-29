@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseAuthServices {
 
-  FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
 
   // Code for the Signup Method

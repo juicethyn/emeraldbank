@@ -31,7 +31,7 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
         color: Colors.grey, // Need opacity here
         borderRadius: BorderRadius.circular(10),
       ),
-      child: new TextFormField(
+      child: TextFormField(
         style: TextStyle(color: Colors.blue),
         controller: widget.controller,
         keyboardType: widget.inputType,
@@ -40,12 +40,12 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
         onSaved: widget.onSaved,
         validator: widget.validator,
         onFieldSubmitted: widget.onFieldSubmitted,
-        decoration: new InputDecoration(
+        decoration: InputDecoration(
           border: InputBorder.none,
           filled: true,
           hintText: widget.hintText,
           hintStyle: TextStyle(color: Colors.black45),
-          suffixIcon: new GestureDetector(
+          suffixIcon: GestureDetector(
             onTap: () {
               setState(() {
                 _obscureText = !_obscureText;

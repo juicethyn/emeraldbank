@@ -6,6 +6,8 @@ import 'investment_page.dart';
 import 'profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
+  const MainNavigation({super.key});
+
   @override
   _MainNavigationState createState() => _MainNavigationState();
 }

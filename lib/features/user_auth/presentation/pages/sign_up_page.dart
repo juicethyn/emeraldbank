@@ -16,9 +16,9 @@ class _SignUpPageState extends State<SignUpPage> {
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   bool isSigningUp = false;
 
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -121,7 +121,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
     if (user != null){
       print("User is successfully created");
-      Navigator.pushNamed(context, "/home");
+      Navigator.pushNamed(context, "/main");
     }
     else{
       print("Some error happened");
