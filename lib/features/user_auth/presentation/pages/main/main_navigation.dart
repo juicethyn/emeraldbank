@@ -76,6 +76,7 @@ class _MainNavigationState extends State<MainNavigation> {
 
 
       body: _pages[_selectedIndex],
+
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -106,7 +107,7 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
             label: 'Home',
           ),
-                    BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: SizedBox(
               width: 30,
               height: 30,

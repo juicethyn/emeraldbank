@@ -12,6 +12,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  
+  // Backend
   bool _isSigning = false;
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   final TextEditingController _emailController = TextEditingController();
@@ -24,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
   
-  
+  // User Interface
   @override
   Widget build(BuildContext context) {
     return Scaffold(
