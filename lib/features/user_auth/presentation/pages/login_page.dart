@@ -190,38 +190,4 @@ class _LoginPageState extends State<LoginPage> {
       print("Some error happened");
     }
   }
-
-  void _showOtpDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        TextEditingController otpController = TextEditingController();
-        return AlertDialog(
-          title: Text("Enter OTP"),
-          content: TextField(
-            controller: otpController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: "Enter OTP sent to your phone"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                String otp = otpController.text;
-                if (otp.isNotEmpty) {
-                  // Verify the OTP
-                  User? user = await _auth.signInWithOTP(_verificationId, otp);
-                  if (user != null) {
-                    Navigator.pushNamed(context, "/main");
-                  } else {
-                    print("OTP verification failed");
-                  }
-                }
-              },
-              child: Text("Verify"),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }

@@ -152,43 +152,4 @@ class _SignUpPageState extends State<SignUpPage> {
       });
     }
   }
-
-  void _showOtpDialog(User user, String verificationId) {
-    TextEditingController otpController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Enter OTP"),
-          content: TextField(
-            controller: otpController,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: "Enter OTP sent to your phone"),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                String smsCode = otpController.text;
-
-                // Create a PhoneAuthCredential with the entered OTP
-                PhoneAuthCredential credential = PhoneAuthProvider.credential(
-                  verificationId: verificationId,
-                  smsCode: smsCode,
-                );
-
-                // Link the phone number to the email/password user
-                await user.linkWithCredential(credential);
-                print("Phone number linked successfully");
-
-                // Proceed with your next steps, e.g., navigate to main page
-                Navigator.pushNamed(context, "/main");
-              },
-              child: Text("Verify"),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
