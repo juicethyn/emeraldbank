@@ -120,7 +120,7 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
             label: 'Accounts',
           ),
-                    BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: SizedBox(
               width: 30,
               height: 30,
@@ -131,9 +131,9 @@ class _MainNavigationState extends State<MainNavigation> {
                 ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
                 ),
             ),
-            label: 'Investment',
+            label: 'Portfolio',
           ),
-                    BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: SizedBox(
               width: 30,
               height: 30,

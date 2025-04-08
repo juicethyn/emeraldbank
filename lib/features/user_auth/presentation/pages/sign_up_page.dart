@@ -120,7 +120,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   /// ✅ Handles Sign Up and Links Phone with Email
   void _signUp() async {
-    String username = _usernameController.text;
+    // String username = _usernameController.text;
     String email = _emailController.text;
     String password = _passwordController.text;
     String phone = _phoneController.text;
@@ -141,18 +141,9 @@ class _SignUpPageState extends State<SignUpPage> {
       // Create email/password account
       User? user = await _auth.signUpWithEmailAndPassword(email, password);
 
+
       if (user != null) {
         print("User successfully created with email and password");
-
-        // --- Link phone number to email account ---
-        PhoneAuthCredential phoneCredential = PhoneAuthProvider.credential(
-          verificationId: "dummy-id",      // Dummy ID for linking
-          smsCode: "123456"                // Dummy SMS code
-        );
-
-        // Link the phone with the existing user
-        await user.linkWithCredential(phoneCredential);
-        print("Phone linked successfully!");
 
         // Navigate to main page
         Navigator.pushNamed(context, "/main");

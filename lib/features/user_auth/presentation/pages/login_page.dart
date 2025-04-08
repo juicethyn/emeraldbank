@@ -30,35 +30,82 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Login"),
-        automaticallyImplyLeading: false,
-      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Login", style: TextStyle(fontSize: 27,fontWeight: FontWeight.bold),
-              
-              
+              Image.asset(
+              'lib/assets/pictures/emerald_logo_white.png',
+              width: 100,
+              height: 100,
+              color: Color(0xFF06D6A0),
+              colorBlendMode: BlendMode.srcIn,
               ),
               SizedBox(
-                height: 30
+                height: 4,
+              ),
+              Text("EmeraldBank", 
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF044E42)
+                ),
+              ),
+              SizedBox(
+                height: 80
+              ),
+              Row(
+                children: [
+                  Text("Username/Email",
+                  style: TextStyle(
+                    color: Color(0xFF1A1819),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600
+                  ),),
+                  ],
               ),
               FormContainerWidget(
                 controller: _emailController,
-                hintText: "Email",
+                // hintText: "Username/Email",
                 isPasswordField: false,
               ),
               SizedBox(
                 height: 10,
               ),
+              Row(
+                children: [
+                  Text("Password",
+                  style: TextStyle(
+                    color: Color(0xFF1A1819),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600
+                  ),),
+                  ],
+              ),
               FormContainerWidget(
                 controller: _passwordController,
-                hintText: "Password",
+                hintText: "",
                 isPasswordField: true,
+              ),
+              SizedBox(
+                height: 2,
+              ),
+              GestureDetector(
+                onTap: () {
+                  print("This is the forgot password");
+                },
+                child: Row(
+                  children: [
+                    Text("Forgot password?",
+                    style: TextStyle(
+                    color: Color(0xFF044E42),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800
+                  ),),
+                  ],
+                ),
               ),
               SizedBox(
                 height: 30,
@@ -69,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   height: 45,
                   decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: Color(0xFF06D6A0),
                     borderRadius: BorderRadius.circular(10)
                   ),
                   child: Center(
@@ -77,26 +124,38 @@ class _LoginPageState extends State<LoginPage> {
                       "Login", 
                       style: 
                       TextStyle(
-                        color: Colors.white, 
+                        color: Colors.white,
+                        fontSize: 16, 
                         fontWeight: FontWeight.bold),
                         )
                       ),
                 ),
               ),
-              SizedBox(height: 20,),
+              SizedBox(height: 24),
+              Text("Version 1.4.3",
+                    style: TextStyle(
+                    color: Color(0xFF1A1819).withAlpha(128),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600
+              ),),
+              SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?"),
+                  Text("Don’t have an Online Banking?",
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600
+                  ),),
                   SizedBox(width: 5,),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpPage()));
                     },
-                    child: Text("Sign Up", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                  )
+                    child: Text("Sign Up", style: TextStyle(color: Color(0xFF028A6E), fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),

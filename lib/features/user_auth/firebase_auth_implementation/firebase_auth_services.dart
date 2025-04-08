@@ -29,13 +29,12 @@ class FirebaseAuthServices {
 
   // Code for the Signin Method
   Future<User?> signInWithEmailAndPassword(String email, String password) async {
-
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return credential.user;
     } on FirebaseAuthException catch (e){
       
-      if(e.code == 'user-not-found' || e.code == 'wrong-password'){
+      if(e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-email'){
         showToast(message: "Invalid email or password.");
       }
       else{
@@ -45,7 +44,5 @@ class FirebaseAuthServices {
     }
 
     return null;
-
   }
-
 }
