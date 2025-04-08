@@ -1,3 +1,4 @@
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/authentication/otp_verification_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -27,6 +28,9 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Sign Up"),
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -123,7 +127,17 @@ class _SignUpPageState extends State<SignUpPage> {
           },
           codeSent: (String verificationId, int? resendToken) {
             // OTP sent successfully, prompt user to enter the OTP
-            _showOtpDialog(user, verificationId);
+            // _showOtpDialog(user, verificationId);
+            Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationPage(
+                verificationId: verificationId,
+                isSignUp: true,
+                user: user,
+              ),
+            ),
+          );
           },
           codeAutoRetrievalTimeout: (String verificationId) {
             print("Auto retrieval timeout: $verificationId");

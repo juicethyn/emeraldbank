@@ -25,16 +25,8 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
   
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white, // Need opacity here
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Color(0xFF06D6A0),
-          width: 2,
-        )
-      ),
       child: TextFormField(
         style: TextStyle(
           color: Colors.black,
@@ -48,9 +40,23 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
         validator: widget.validator,
         onFieldSubmitted: widget.onFieldSubmitted,
         decoration: InputDecoration(
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Color(0xFF06D6A0),
+              width: 1.8,
+            ),
+            borderRadius: BorderRadius.circular(12)
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: Color(0xFF06D6A0),
+              width: 1.8,
+            ),
+            borderRadius: BorderRadius.circular(12)
+          ),
           border: InputBorder.none,
+          fillColor: Colors.white54,
           filled: true,
-          fillColor: Colors.white10,
           hintText: widget.hintText,
           hintStyle: TextStyle(color: Colors.black45),
           suffixIcon: GestureDetector(

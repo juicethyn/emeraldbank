@@ -1,6 +1,8 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/authentication/otp_verification_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/sign_up_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/form_container_widget.dart';
+import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -70,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
               SizedBox(height: 2),
               GestureDetector(
                 onTap: () {
-                  print("This is the forgot password");
+                  showSnackbarMessage(context, "Forgot password Under Development");
                 },
                 child: Row(
                   children: [
@@ -172,7 +174,13 @@ class _LoginPageState extends State<LoginPage> {
               _verificationId = verificationId;
             });
             // Prompt the user to enter OTP here
-            _showOtpDialog();
+            // _showOtpDialog();
+            Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationPage(verificationId: verificationId),
+            ),
+            );
           },
         );
       } else {
