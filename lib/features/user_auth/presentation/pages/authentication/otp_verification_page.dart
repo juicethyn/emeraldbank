@@ -1,26 +1,40 @@
-import 'package:emeraldbank_mobileapp/features/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
 import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String verificationId;
   final bool isSignUp;
-  final User? user; // Only used during signup
+  final String? accountNickName;
+  final String? accountName;
+  final String? accountNumber;
+  final String? birthDate;
+  final String? email;
+  final String? phone;
+  final String? password;
+  // final PhoneAuthCredential? credential; // Optional for instant verification
 
-  const OtpVerificationPage({
-    super.key,
-    required this.verificationId,
-    this.isSignUp = false,
-    this.user,
-  });
+ const OtpVerificationPage({
+  super.key,
+  required this.verificationId,
+  this.isSignUp = false, // default to false
+  this.accountName,
+  this.accountNickName,
+  this.accountNumber,
+  this.birthDate,
+  this.email,
+  this.phone,
+  this.password,
+  // this.credential,
+});
 
   @override
   State<OtpVerificationPage> createState() => _OtpVerificationPageState();
 }
 
 class _OtpVerificationPageState extends State<OtpVerificationPage> {
-  final FirebaseAuthServices _auth = FirebaseAuthServices();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
   bool _isVerifying = false;
@@ -48,17 +62,42 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         smsCode: otp,
       );
 
-      if (widget.isSignUp && widget.user != null) {
-        // 🔒 Sign-up flow: Link phone to existing user
-        await widget.user!.linkWithCredential(credential);
+      if (widget.isSignUp) {
+        // Manually verify OTP
+        final PhoneAuthCredential credential = PhoneAuthProvider.credential(
+          verificationId: widget.verificationId,
+          smsCode: otp,
+        );
+
+        // ✅ Now create account
+        UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: widget.email!, password: widget.password!);
+
+        // ✅ Link phone to the new user
+        await userCredential.user!.linkWithCredential(credential);
+
+        // ✅ Add user to Firestore
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
+          'uid': userCredential.user!.uid,
+          'email': widget.email,
+          'phoneNumber': widget.phone,
+          'createdAt': Timestamp.now(),
+          'balance': 10000,
+          'accountName': widget.accountName,
+          'accountNumber': widget.accountNumber,
+          'accountNickname': widget.accountNickName,
+          'birthDate': widget.birthDate,
+          'issuedOn': "03/15/2024",
+          'expiresEnd': "03/15/2034",
+        });
       } else {
         // 🔐 Login flow: Sign in directly with phone OTP
         await FirebaseAuth.instance.signInWithCredential(credential);
       }
-
-      Navigator.pushReplacementNamed(context, "/main");
+    if(!mounted) return;
+    Navigator.pushReplacementNamed(context, "/main");
     } catch (e) {
-      print("OTP verification error: $e");
+      debugPrint("OTP verification error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Invalid OTP. Please try again.")),
       );
@@ -141,7 +180,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                             FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
                           }
                           if (_controllers.every((controller) => controller.text.isNotEmpty)) {
-                            _verifyOtp(); // Automatically verify when all fields are filled
+                            _isVerifying ? null : _verifyOtp(); // Automatically verify when all fields are filled
                           }
                         },
                       ),

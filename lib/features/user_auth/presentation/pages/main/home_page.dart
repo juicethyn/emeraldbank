@@ -4,11 +4,21 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
+import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
+class HomePage extends StatefulWidget {
+  final UserModel? user;
 
-class HomePage extends StatelessWidget {
-  
+  // Pass `key` directly to the super constructor
+  HomePage({Key? key, this.user}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final List<Map<String, dynamic>> items = [
     {
       'image': 'lib/assets/shortcuts_icon/send.png',
@@ -20,16 +30,6 @@ class HomePage extends StatelessWidget {
         );
       },
     },
-    // {
-    //   'image': 'lib/assets/shortcuts_icon/topup.png',
-    //   'text': 'Top Up',
-    //   'onTap': (BuildContext context) {
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(builder: (_) => BillsPage()),
-    //     );
-    //   },
-    // },
     {
       'image': 'lib/assets/shortcuts_icon/bills.png',
       'text': 'Bills',
@@ -40,46 +40,6 @@ class HomePage extends StatelessWidget {
         );
       },
     },
-    // {
-    //   'image': 'lib/assets/shortcuts_icon/load.png',
-    //   'text': 'Load',
-    //   'onTap': (BuildContext context) {
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(builder: (_) => SendPage()),
-    //     );
-    //   },
-    // },
-    // {
-    //   'image': 'lib/assets/shortcuts_icon/games.png',
-    //   'text': 'Games',
-    //   'onTap': (BuildContext context) {
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(builder: (_) => SendPage()),
-    //     );
-    //   },
-    // },
-    // {
-    //   'image': 'lib/assets/shortcuts_icon/insurance.png',
-    //   'text': 'Insurance',
-    //   'onTap': (BuildContext context) {
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(builder: (_) => SendPage()),
-    //     );
-    //   },
-    // },
-    // {
-    //   'image': 'lib/assets/shortcuts_icon/support.png',
-    //   'text': 'Support',
-    //   'onTap': (BuildContext context) {
-    //     Navigator.push(
-    //       context,
-    //       MaterialPageRoute(builder: (_) => SendPage()),
-    //     );
-    //   },
-    // },
     {
       'image': 'lib/assets/shortcuts_icon/more.png',
       'text': 'More',
@@ -91,10 +51,12 @@ class HomePage extends StatelessWidget {
       },
     },
   ];
-  HomePage({super.key}); // naka const??
 
+ // naka const??
   @override
   Widget build(BuildContext context) {
+    UserModel? user = widget.user;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -180,7 +142,7 @@ class HomePage extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                "₱54,501.25",
+                                "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
@@ -284,7 +246,7 @@ class HomePage extends StatelessWidget {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("**** **** **** 9101",
+                                  Text("${user?.accountNumber}",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
@@ -317,7 +279,7 @@ class HomePage extends StatelessWidget {
                                     ),
                                     ),
                                     SizedBox(width: 4),
-                                    Text("**/**/****",
+                                    Text("${user?.issuedOn}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.normal,
@@ -335,7 +297,7 @@ class HomePage extends StatelessWidget {
                                     ),
                                     ),
                                     SizedBox(width: 4),
-                                    Text("**/**/****",
+                                    Text("${user?.expiresEnd}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.normal,
@@ -361,10 +323,10 @@ class HomePage extends StatelessWidget {
                                         fontWeight: FontWeight.w300,
                                         color: Colors.white
                                       ),),
-                                    Text("J*** M*** M*****",
+                                    Text("${user?.accountName}",
                                     style: TextStyle(
                                         fontSize: 18,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w400,
                                         color: Colors.white
                                       ),),
                                   ],
