@@ -27,7 +27,9 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
   List<String> _banks = [];
   List<String> _loanTypes = [];
   bool _isLoading = true;
+  bool _isLoanTypesLoading = false;
   bool _accountNumberVisible = false;
+  Map<String, String> _bankNameToIdMap = {};
 
   @override
   void initState() {
@@ -58,56 +60,62 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
       // Fetch Banks Handler
       final bankSnapshot =
           await FirebaseFirestore.instance.collection('banks').get();
+
       final banks =
-          bankSnapshot.docs.map((doc) => doc['later2'] as String).toList();
+          bankSnapshot.docs.map((doc) {
+            return {'id': doc.id, 'name': doc['bank_name'] as String};
+          }).toList();
 
-      // Fetch Loan Types Handler
-      final loanTypeSnapshot =
-          await FirebaseFirestore.instance.collection('loanTypes').get();
-      final loanTypes =
-          loanTypeSnapshot.docs.map((doc) => doc['later1'] as String).toList();
+      // Build the Mapping between bank names and IDs
+      _bankNameToIdMap = {
+        for (var bank in banks) bank['name'] as String: bank['id'] as String,
+      };
 
-      // Default values, testing purposes
-      if (banks.isEmpty || loanTypes.isEmpty) {
-        // use default values
-        setState(() {
-          _banks = ['BANK1', 'BANK2', 'BANK3', 'BANK4', 'BANK5', 'BANK6'];
-          _loanTypes = [
-            'PERSONAL LOAN',
-            'HOME LOAN',
-            'AUTO LOAN',
-            'STUDENT LOAN',
-            'BUSINESS LOAN',
-          ];
-          _isLoading = false;
-        });
-        print('Using Default Values');
-      } else {
-        setState(() {
-          _banks = banks;
-          _loanTypes = loanTypes;
-          _isLoading = false;
-        });
-        print('Using fetched values from Firestore');
-      }
-      print('Fetched Banks: $_banks');
-      print('Fetched Loan Types: $_loanTypes');
-    } catch (e) {
-      // This catch block handles exceptions from Firestore
-      print('Error Fetching data: $e');
       setState(() {
-        _banks = ['BDO', 'METROBANK', 'SECURITY BANK', 'UNIONBANK'];
-        _loanTypes = [
-          'PERSONAL LOAN',
-          'HOME LOAN',
-          'AUTO LOAN',
-          'STUDENT LOAN',
-          'BUSINESS LOAN',
-        ];
+        _banks = banks.map((bank) => bank['name'] as String).toList();
+        _loanTypes = [];
+        _selectedBank = null;
+        _selectedLoanType = null;
         _isLoading = false;
       });
-      print('Fetched Banks: $_banks');
-      print('Fetched Loan Types: $_loanTypes');
+    } catch (e) {
+      print('Error Fetching data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchLoanProducts(String bankName) async {
+    setState(() => _isLoanTypesLoading = true);
+    try {
+      final bankId = _bankNameToIdMap[bankName];
+
+      if (bankId != null) {
+        final loanProductSnapshot =
+            await FirebaseFirestore.instance
+                .collection('banks')
+                .doc(bankId)
+                .collection('loanProducts')
+                .get();
+
+        final loanTypes =
+            loanProductSnapshot.docs
+                .map((doc) => doc['name'] as String)
+                .toList();
+
+        setState(() {
+          _loanTypes = loanTypes;
+          _selectedLoanType = null;
+          _isLoanTypesLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error Fetching data: $e');
+      setState(() {
+        _loanTypes = [];
+        _isLoanTypesLoading = false;
+      });
     }
   }
 
@@ -278,7 +286,12 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
                         onChanged: (String? newValue) {
                           setState(() {
                             _selectedBank = newValue;
+                            _selectedLoanType = null;
                           });
+
+                          if (newValue != null) {
+                            _fetchLoanProducts(newValue);
+                          }
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -363,37 +376,6 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
                       ),
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _accountNumberController,
-                        decoration: InputDecoration(
-                          labelText: 'Loan Account Number',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.numbers),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _accountNumberVisible = !_accountNumberVisible;
-                              });
-                            },
-                            icon: Icon(
-                              _accountNumberVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                        obscureText: !_accountNumberVisible,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter loan account number';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
                       // Loan Dropdown
                       DropdownButtonFormField2<String>(
                         value: _selectedLoanType,
@@ -409,11 +391,14 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
                                 child: Text(type),
                               );
                             }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedLoanType = newValue;
-                          });
-                        },
+                        onChanged:
+                            _isLoanTypesLoading
+                                ? null
+                                : (String? newValue) {
+                                  setState(() {
+                                    _selectedLoanType = newValue;
+                                  });
+                                },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please select a loan type';
@@ -493,6 +478,37 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
                           if (!isOpen) {
                             _searchDataDropDownController.clear();
                           }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _accountNumberController,
+                        decoration: InputDecoration(
+                          labelText: 'Loan Account Number',
+                          border: const OutlineInputBorder(),
+                          prefixIcon: const Icon(Icons.numbers),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _accountNumberVisible = !_accountNumberVisible;
+                              });
+                            },
+                            icon: Icon(
+                              _accountNumberVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                        obscureText: !_accountNumberVisible,
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter loan account number';
+                          }
+                          return null;
                         },
                       ),
                       const SizedBox(height: 16),

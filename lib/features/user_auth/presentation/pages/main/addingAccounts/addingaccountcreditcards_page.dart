@@ -29,9 +29,11 @@ class _AddingAccountCreditCardsPage
   List<String> _banks = [];
   List<String> _creditCardTypes = [];
   bool _isLoading = true;
+  bool _isCardTypesLoading = false;
   bool _cvvVisible = false;
   bool _accountNumberVisible = false;
   bool _creditCardNumberVisible = false;
+  Map<String, String> _bankNameToIdMap = {};
 
   @override
   void initState() {
@@ -60,51 +62,74 @@ class _AddingAccountCreditCardsPage
     setState(() => _isLoading = true);
 
     try {
-      // Fetch Bank Handler
+      // Fetch Banks Handler
       final bankSnapshot =
           await FirebaseFirestore.instance.collection('banks').get();
+
       final banks =
-          bankSnapshot.docs.map((doc) => doc['later2'] as String).toList();
+          bankSnapshot.docs.map((doc) {
+            return {'id': doc.id, 'name': doc['bank_name'] as String};
+          }).toList();
 
-      // Fetch Savings Type Handler
-      final creditCardTypeSnapshot =
-          await FirebaseFirestore.instance.collection('creditCardTypes').get();
-      final creditCardTypes =
-          creditCardTypeSnapshot.docs
-              .map((doc) => doc['later1'] as String)
-              .toList();
+      // Build the Mapping between bank names and IDs
+      _bankNameToIdMap = {
+        for (var bank in banks) bank['name'] as String: bank['id'] as String,
+      };
 
-      // Default values, testing purposes
-      if (banks.isEmpty || creditCardTypes.isEmpty) {
-        // use default values
-        setState(() {
-          _banks = ['BANKS1', 'BANKS2', 'BANKS3', 'BANKS4', 'BANKS5', 'BANKS6'];
-          _creditCardTypes = [
-            'BASIC CARDS',
-            'GOLD CARDS',
-            'PLATINUM CARDS',
-            'TITANIUM CARDS',
-          ];
-          _isLoading = false;
+      setState(() {
+        _banks = banks.map((bank) => bank['name'] as String).toList();
+        _creditCardTypes = [];
+        _selectedBank = null;
+        _selectedCardType = null;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error Fetching data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchCreditCardProducts(String bankName) async {
+    setState(() => _isCardTypesLoading = true);
+
+    try {
+      final bankId = _bankNameToIdMap[bankName];
+      print('Fetching credit card products for bank: $bankName, ID: $bankId');
+
+      if (bankId != null) {
+        final creditCardProductSnapshot =
+            await FirebaseFirestore.instance
+                .collection('banks')
+                .doc(bankId)
+                .collection('creditCardsProducts')
+                .get();
+
+        print(
+          'Found ${creditCardProductSnapshot.docs.length} credit card products',
+        );
+
+        creditCardProductSnapshot.docs.forEach((doc) {
+          print('Product: ${doc['name']}');
         });
-      } else {
+
+        final creditCardTypes =
+            creditCardProductSnapshot.docs
+                .map((doc) => doc['name'] as String)
+                .toList();
+
         setState(() {
-          _banks = banks;
           _creditCardTypes = creditCardTypes;
-          _isLoading = false;
+          _selectedCardType = null;
+          _isCardTypesLoading = false;
         });
       }
     } catch (e) {
       print('Error Fetching data: $e');
       setState(() {
-        _banks = ['BANKS1', 'BANKS2', 'BANKS3', 'BANKS4', 'BANKS5', 'BANKS6'];
-        _creditCardTypes = [
-          'BASIC CARDS',
-          'GOLD CARDS',
-          'PLATINUM CARDS',
-          'TITANIUM CARDS',
-        ];
-        _isLoading = false;
+        _creditCardTypes = [];
+        _isCardTypesLoading = false;
       });
     }
   }
@@ -279,7 +304,12 @@ class _AddingAccountCreditCardsPage
                         onChanged: (String? newValue) {
                           setState(() {
                             _selectedBank = newValue;
+                            _selectedCardType = null;
                           });
+
+                          if (newValue != null) {
+                            _fetchCreditCardProducts(newValue);
+                          }
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -368,7 +398,7 @@ class _AddingAccountCreditCardsPage
                       DropdownButtonFormField2<String>(
                         value: _selectedCardType,
                         decoration: const InputDecoration(
-                          labelText: 'Savings Type',
+                          labelText: 'Credit Card Type',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.category),
                         ),
@@ -379,11 +409,14 @@ class _AddingAccountCreditCardsPage
                                 child: Text(type),
                               );
                             }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedCardType = newValue;
-                          });
-                        },
+                        onChanged:
+                            _isCardTypesLoading
+                                ? null
+                                : (String? newValue) {
+                                  setState(() {
+                                    _selectedCardType = newValue;
+                                  });
+                                },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please select a loan type';

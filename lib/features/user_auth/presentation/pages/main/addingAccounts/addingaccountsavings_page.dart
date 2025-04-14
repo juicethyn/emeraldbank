@@ -27,8 +27,10 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
   List<String> _banks = [];
   List<String> _savingsTypes = [];
   bool _isLoading = true;
+  bool _isSavingsTypeLoading = false;
   bool _accountNumberVisible = false;
   bool _cvvVisible = false;
+  Map<String, String> _bankNameToIdMap = {};
 
   @override
   void initState() {
@@ -59,50 +61,61 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
       // fetch Banks handler
       final bankSnapshot =
           await FirebaseFirestore.instance.collection('banks').get();
+
       final banks =
-          bankSnapshot.docs.map((doc) => doc['later2'] as String).toList();
+          bankSnapshot.docs.map((doc) {
+            return {'id': doc.id, 'name': doc['bank_name'] as String};
+          }).toList();
 
-      // Fetch Savings Types Handler
-      final savingsTypeSnapshot =
-          await FirebaseFirestore.instance.collection('savingTypes').get();
-      final savingsTypes =
-          savingsTypeSnapshot.docs
-              .map((doc) => doc['later1'] as String)
-              .toList();
+      _bankNameToIdMap = {
+        for (var bank in banks) bank['name'] as String: bank['id'] as String,
+      };
 
-      // Default values, testing purposes
-      if (banks.isEmpty || savingsTypes.isEmpty) {
-        // use default values
-        setState(() {
-          _banks = ['BANKS1', 'BANKS2', 'BANKS3', 'BANKS4', 'BANKS5', 'BANKS6'];
-          _savingsTypes = [
-            'REGULAR SAVINGS',
-            'TIME DEPOSIT',
-            'CHECKING ACCOUNT',
-          ];
-          _isLoading = false;
-        });
-        print('Using Default Values');
-      } else {
-        setState(() {
-          _banks = banks;
-          _savingsTypes = savingsTypes;
-          _isLoading = false;
-        });
-        print('Using fetched values from Firestore');
-      }
-      print('Fetched Banks: $_banks');
-      print('Fetched Saving Types: $_savingsTypes');
-    } catch (e) {
-      // This catch block handles exceptions from Firestore
-      print('Error Fetching data: $e');
       setState(() {
-        _banks = ['BDO', 'METROBANK', 'SECURITY BANK', 'UNIONBANK'];
-        _savingsTypes = ['REGULAR SAVINGS', 'TIME DEPOSIT', 'CHECKING ACCOUNT'];
+        _banks = banks.map((bank) => bank['name'] as String).toList();
+        _savingsTypes = [];
+        _selectedBank = null;
+        _selectedSavingsType = null;
         _isLoading = false;
       });
-      print('Fetched Banks: $_banks');
-      print('Fetched Saving Types: $_savingsTypes');
+    } catch (e) {
+      print('Error Fetching data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchSavingsProducts(String bankName) async {
+    setState(() => _isSavingsTypeLoading = true);
+    try {
+      final bankId = _bankNameToIdMap[bankName];
+
+      if (bankId != null) {
+        final savingsProductSnapshot =
+            await FirebaseFirestore.instance
+                .collection('banks')
+                .doc(bankId)
+                .collection('savingsProducts')
+                .get();
+
+        final savingsTypes =
+            savingsProductSnapshot.docs
+                .map((doc) => doc['name'] as String)
+                .toList();
+
+        setState(() {
+          _savingsTypes = savingsTypes;
+          _selectedSavingsType = null;
+          _isSavingsTypeLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error Fetching data: $e');
+      setState(() {
+        _savingsTypes = [];
+        _isSavingsTypeLoading = false;
+      });
     }
   }
 
@@ -273,7 +286,12 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
                         onChanged: (String? newValue) {
                           setState(() {
                             _selectedBank = newValue;
+                            _selectedSavingsType = null;
                           });
+
+                          if (newValue != null) {
+                            _fetchSavingsProducts(newValue);
+                          }
                         },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -373,11 +391,14 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
                                 child: Text(type),
                               );
                             }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedSavingsType = newValue;
-                          });
-                        },
+                        onChanged:
+                            _isSavingsTypeLoading
+                                ? null
+                                : (String? newValue) {
+                                  setState(() {
+                                    _selectedSavingsType = newValue;
+                                  });
+                                },
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return 'Please select a loan type';
