@@ -4,6 +4,9 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/fo
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+// Things needs to be done here:
+// 1. Crosschecking if email is already registered, thus it will make an error. - Nyht
+
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -38,7 +41,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime(2000), // default date
+      initialDate: DateTime(2003), // default date
       firstDate: DateTime(1900), // earliest DOB
       lastDate: DateTime.now(),  // today is the latest allowed
     );

@@ -28,20 +28,29 @@ class SignUpPage2 extends StatefulWidget {
 class _SignUpPage2State extends State<SignUpPage2> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool isSigningUp = false;
 
   @override
   void dispose() {
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   void _sendOtpAndGoToOtpPage() async {
     String password = _passwordController.text;
+    String confirmPassword = _confirmPasswordController.text;
 
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Password must be at least 6 characters")),
+      );
+      return;
+    }
+    else if (password != confirmPassword){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Passwords must be the same. Try again.")),
       );
       return;
     }
@@ -143,6 +152,23 @@ class _SignUpPage2State extends State<SignUpPage2> {
             ),
             FormContainerWidget(
               controller: _passwordController,
+              hintText: "Enter password",
+              isPasswordField: true,
+            ),
+            SizedBox(height: 12),
+            Row(
+              children: [
+                Text(
+                  "Confirm Password",
+                  style: TextStyle(
+                      color: Color(0xFF1A1819),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            FormContainerWidget(
+              controller: _confirmPasswordController,
               hintText: "Enter password",
               isPasswordField: true,
             ),

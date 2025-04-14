@@ -1,24 +1,37 @@
 
 
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
+import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 class HomePage extends StatefulWidget {
   final UserModel? user;
-
+  final bool isBalanceHidden;
+  final VoidCallback onToggleBalanceVisibility;
+  final bool isCardHidden;
+  final VoidCallback onToggleCardVisibility;
   // Pass `key` directly to the super constructor
-  HomePage({Key? key, this.user}) : super(key: key);
+  HomePage({
+  Key? key, 
+  this.user,
+  required this.isBalanceHidden,
+  required this.onToggleBalanceVisibility,
+  required this.isCardHidden,
+  required this.onToggleCardVisibility,
+  }) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+
   final List<Map<String, dynamic>> items = [
     {
       'image': 'lib/assets/shortcuts_icon/send.png',
@@ -52,11 +65,23 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
+  String formatAccountNumber(String accountNumber) {
+    final cleaned = accountNumber.replaceAll(RegExp(r'\D'), ''); // Remove non-digits
+    final buffer = StringBuffer();
+    for (int i = 0; i < cleaned.length; i++) {
+      buffer.write(cleaned[i]);
+      if ((i + 1) % 4 == 0 && i + 1 != cleaned.length) {
+        buffer.write(' ');
+      }
+    }
+    return buffer.toString();
+  }
+
+
  // naka const??
   @override
   Widget build(BuildContext context) {
     UserModel? user = widget.user;
-
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -81,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                         HomeTextButtonWidget(
                           buttonText: "Credits", 
                           onPressed: () { 
-                            print("This is the credit button");
+                            showSnackbarMessage(context, "Credits under Development");
                           },
                           horizontalPadding: 35,
                           ),
@@ -89,7 +114,7 @@ class _HomePageState extends State<HomePage> {
                         HomeTextButtonWidget(
                           buttonText: "Loan", 
                           onPressed: () { 
-                            print("This is the loan button");
+                            showSnackbarMessage(context, "Loan is under Development");
                           },
                           horizontalPadding: 40,
                           ),
@@ -142,7 +167,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               Text(
-                                "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
+                                widget.isBalanceHidden? "₱••••••" : "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
@@ -156,12 +181,12 @@ class _HomePageState extends State<HomePage> {
                             top: 2,  // Adjust the top position as needed  // Adjust the right position as needed
                             child: IconButton(
                               icon: Icon(
-                                Icons.visibility, // Eye icon
+                                widget.isBalanceHidden? Icons.visibility_off : Icons.visibility, // Eye icon
                                 size: 16, // You can adjust the size of the icon
                                 color: Colors.white, // Icon color (same as text color or any color you want)
                               ),
                               onPressed: () {
-                                print("Eye icon clicked");
+                                widget.onToggleBalanceVisibility();
                               },
                             ),
                           ),
@@ -246,21 +271,23 @@ class _HomePageState extends State<HomePage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("${user?.accountNumber}",
+                                  Text(
+                                  widget.isCardHidden ? "•••• •••• •••• ••••" : user?.accountNumber != null ? formatAccountNumber(user!.accountNumber) : '',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 24,
                                     fontWeight: FontWeight.w600,
+                                    letterSpacing: 2,
                                   ),
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      Icons.visibility_off, // Eye icon
+                                      widget.isCardHidden? Icons.visibility_off : Icons.visibility, // Eye icon
                                       size: 24, // You can adjust the size of the icon
                                       color: Colors.white, // Icon color (same as text color or any color you want)
                                     ),
                                     onPressed: () {
-                                      print("Eye icon clicked");
+                                      widget.onToggleCardVisibility();
                                     },
                                   ),
                                 ],
@@ -279,7 +306,8 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     ),
                                     SizedBox(width: 4),
-                                    Text("${user?.issuedOn}",
+                                    Text(
+                                    widget.isCardHidden ? "••/••/••••" : "${user?.issuedOn}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.normal,
@@ -297,7 +325,8 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     ),
                                     SizedBox(width: 4),
-                                    Text("${user?.expiresEnd}",
+                                    Text(
+                                    widget.isCardHidden ? "••/••/••••" : "${user?.expiresEnd}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.normal,
@@ -308,9 +337,7 @@ class _HomePageState extends State<HomePage> {
                                 )
                               ],
                             ),
-
                             SizedBox(height: 4),
-
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -323,7 +350,8 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w300,
                                         color: Colors.white
                                       ),),
-                                    Text("${user?.accountName}",
+                                    Text(
+                                    widget.isCardHidden ? "••••••••••••••••••••" :"${user?.accountName}",
                                     style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w400,
@@ -346,7 +374,6 @@ class _HomePageState extends State<HomePage> {
                   ), // Credit Card Details
                 ],
               ),
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -358,9 +385,10 @@ class _HomePageState extends State<HomePage> {
                   Align(
                     alignment: Alignment.bottomRight,
                     child: TextButton(
-                      onPressed: () {
-                        print("This is the customize button");
-                      },
+                      onPressed:
+                        () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => CustomizePage()));
+                    },
                       child: Text("Customize",
                       style: TextStyle(
                         fontSize: 10,

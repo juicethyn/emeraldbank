@@ -18,6 +18,8 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
   UserModel? currentUser;
+  bool isBalanceHidden = false;
+  bool isCardHidden = false;
 
   void _onItemTapped(int index) {
     setState(() {
@@ -47,6 +49,18 @@ class _MainNavigationState extends State<MainNavigation> {
     }
   }
 
+  void toggleBalanceVisibility() {
+    setState(() {
+      isBalanceHidden = !isBalanceHidden;
+    });
+  }
+
+  void toggleCardVisibility() {
+    setState(() {
+      isCardHidden = !isCardHidden;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Show a loading indicator until currentUser is available
@@ -71,7 +85,12 @@ class _MainNavigationState extends State<MainNavigation> {
 
     // Once currentUser is available, initialize pages
     final List<Widget> _pages = [
-      HomePage(user: currentUser),  // Pass currentUser to HomePage
+      HomePage(
+        user: currentUser, 
+        isBalanceHidden: isBalanceHidden,
+        onToggleBalanceVisibility: toggleBalanceVisibility,
+        isCardHidden: isCardHidden,
+        onToggleCardVisibility: toggleCardVisibility),  // Pass currentUser to HomePage
       AccountPage(),
       InvestmentPage(),
       ProfilePage(),
