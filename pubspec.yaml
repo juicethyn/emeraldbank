@@ -71,6 +71,26 @@ flutter:
     - lib/assets/icons/logo_small_icon.svg
     - lib/assets/icons/transaction_notification_icon.svg
     - lib/assets/icons/update_notification_icon.svg
+    - lib/assets/icons/eye_icon.svg
+    - lib/assets/icons/visa_icon.svg
+
+  # Shortcuts_Icon Folder
+    - lib/assets/shortcuts_icon/send.png
+    - lib/assets/shortcuts_icon/topup.png
+    - lib/assets/shortcuts_icon/bills.png
+    - lib/assets/shortcuts_icon/load.png
+    - lib/assets/shortcuts_icon/games.png
+    - lib/assets/shortcuts_icon/insurance.png
+    - lib/assets/shortcuts_icon/support.png
+    - lib/assets/shortcuts_icon/more.png
+
+    #Pictures Folder
+    - lib/assets/pictures/profilepicture.png
+    - lib/assets/pictures/background_logo.png
+    - lib/assets/pictures/emerald_logo_white.png
+    - lib/assets/pictures/chip.png
+
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

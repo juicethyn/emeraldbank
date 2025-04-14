@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emeraldbank_mobileapp/models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home_page.dart';
@@ -14,29 +17,92 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    HomePage(),
-    AccountPage(),
-    InvestmentPage(),
-    ProfilePage(),
-  ];
+  UserModel? currentUser;
+  bool isBalanceHidden = false;
+  bool isCardHidden = false;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+    _getCurrentUser(); // Will be removing and only used for testing, reason: inffecient way of updating user balance.
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentUser();
+  }
+
+  // Fetch the current user's data from Firestore
+  Future<void> _getCurrentUser() async {
+    String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (uid.isNotEmpty) {
+      // Fetch user data from Firestore
+      var userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          currentUser = UserModel.fromFirestore(userDoc.data()!);
+        });
+      }
+    }
+  }
+
+  void toggleBalanceVisibility() {
+    setState(() {
+      isBalanceHidden = !isBalanceHidden;
+    });
+  }
+
+  void toggleCardVisibility() {
+    setState(() {
+      isCardHidden = !isCardHidden;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    // Show a loading indicator until currentUser is available
+    if (currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          title: const Text(
+            'Loading...',
+            style: TextStyle(
+              color: Color(0xFF1A1819),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          automaticallyImplyLeading: false,
+        ),
+        body: Center(child: CircularProgressIndicator()),  // Loading state
+      );
+    }
+
+    // Once currentUser is available, initialize pages
+    final List<Widget> _pages = [
+      HomePage(
+        user: currentUser, 
+        isBalanceHidden: isBalanceHidden,
+        onToggleBalanceVisibility: toggleBalanceVisibility,
+        isCardHidden: isCardHidden,
+        onToggleCardVisibility: toggleCardVisibility),  // Pass currentUser to HomePage
+      AccountPage(),
+      InvestmentPage(),
+      ProfilePage(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          'Hi User',
-          style: TextStyle(
+        title: Text(
+          'Hi ${currentUser?.accountNickName}',  // Show email when currentUser is available
+          style: const TextStyle(
             color: Color(0xFF1A1819),
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -44,10 +110,9 @@ class _MainNavigationState extends State<MainNavigation> {
         ),
         automaticallyImplyLeading: false,
         actions: [
-          // Notifications Icon
           IconButton(
             icon: SvgPicture.asset(
-              'lib/assets/icons/update_notification_icon.svg',   // Use your custom SVG
+              'lib/assets/icons/update_notification_icon.svg',
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
@@ -57,11 +122,9 @@ class _MainNavigationState extends State<MainNavigation> {
             },
           ),
           const SizedBox(width: 8),
-
-          // Updates Icon
           IconButton(
             icon: SvgPicture.asset(
-              'lib/assets/icons/transaction_notification_icon.svg',   // Use your custom SVG
+              'lib/assets/icons/transaction_notification_icon.svg',
               width: 24,
               height: 24,
               colorFilter: const ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
@@ -73,8 +136,6 @@ class _MainNavigationState extends State<MainNavigation> {
           const SizedBox(width: 16),
         ],
       ),
-
-
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -82,16 +143,8 @@ class _MainNavigationState extends State<MainNavigation> {
         onTap: _onItemTapped,
         selectedItemColor: Color(0xFF06D6A0),
         unselectedItemColor: Color(0xFF1A1819),
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Colors.black
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Colors.black
-        ),
+        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
+        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: SizedBox(
@@ -99,49 +152,41 @@ class _MainNavigationState extends State<MainNavigation> {
               height: 30,
               child: SvgPicture.asset(
                 'lib/assets/icons/home_icon.svg',
-                colorFilter: _selectedIndex == 0 ? 
-                ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : 
-                ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-                ),
+                colorFilter: _selectedIndex == 0 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
+              ),
             ),
             label: 'Home',
           ),
-                    BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: SizedBox(
               width: 30,
               height: 30,
               child: SvgPicture.asset(
                 'lib/assets/icons/account_icon.svg',
-                colorFilter: _selectedIndex == 1 ? 
-                ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : 
-                ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-                ),
+                colorFilter: _selectedIndex == 1 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
+              ),
             ),
             label: 'Accounts',
           ),
-                    BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: SizedBox(
               width: 30,
               height: 30,
               child: SvgPicture.asset(
                 'lib/assets/icons/investment_icon.svg',
-                colorFilter: _selectedIndex == 2 ? 
-                ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : 
-                ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-                ),
+                colorFilter: _selectedIndex == 2 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
+              ),
             ),
-            label: 'Investment',
+            label: 'Portfolio',
           ),
-                    BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: SizedBox(
               width: 30,
               height: 30,
               child: SvgPicture.asset(
                 'lib/assets/icons/profile_icon.svg',
-                colorFilter: _selectedIndex == 3 ? 
-                ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : 
-                ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-                ),
+                colorFilter: _selectedIndex == 3 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
+              ),
             ),
             label: 'Profile',
           ),
