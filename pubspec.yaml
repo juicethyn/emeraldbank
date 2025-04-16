@@ -73,6 +73,10 @@ flutter:
     - lib/assets/icons/update_notification_icon.svg
     - lib/assets/icons/eye_icon.svg
     - lib/assets/icons/visa_icon.svg
+    - lib/assets/icons/creditcard_cardIcon.svg
+    - lib/assets/icons/loans_cardIcon.svg
+    - lib/assets/icons/piggybank_cardIcon.svg
+    - lib/assets/icons/return_customCircularHintYellow.svg
 
   # Shortcuts_Icon Folder
     - lib/assets/shortcuts_icon/send.png

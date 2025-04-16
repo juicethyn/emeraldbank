@@ -6,14 +6,12 @@ import 'package:flutter/material.dart';
 
 // Main function where the application will run
 Future main() async {
-  
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   return runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  
   const MyApp({super.key});
 
   // This widget is the root of your application.
@@ -23,7 +21,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       routes: {
         '/main': (context) => MainNavigation(),
-        '/login': (context) => LoginPage(), 
+        '/login': (context) => LoginPage(),
       },
       theme: ThemeData(
         fontFamily: 'Montserrat',
@@ -44,9 +42,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: SplashScreen(
-        child: LoginPage(),
-      )
+      home: SplashScreen(child: LoginPage()),
     );
   }
 }

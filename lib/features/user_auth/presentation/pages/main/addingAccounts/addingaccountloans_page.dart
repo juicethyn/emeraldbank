@@ -1,4 +1,7 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/adding_account_form_appbar.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/text_style.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -128,7 +131,7 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
     );
     if (picked != null) {
       setState(() {
-        _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dobController.text = DateFormat('MM/dd/yyyy').format(picked);
       });
     }
   }
@@ -148,10 +151,7 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Loan Account'),
-        backgroundColor: Colors.green.shade700,
-      ),
+      appBar: const AddingAccountFormAppbar(title: 'Add Loan Account'),
 
       body:
           _isLoading
@@ -163,387 +163,560 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Personal Information Form Section
+                      // ----------------------------------------------------
+                      // PERSONAL INFORMATION SECTION
+                      // ----------------------------------------------------
                       _buildSectionHeader('Personal Information'),
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Account Holder Name',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please Enter Your Account Holder Name';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Date of Birth
-                      TextFormField(
-                        controller: _dobController,
-                        decoration: InputDecoration(
-                          labelText: 'Date of Birth',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          //   hintText: DateFormat(
-                          //     'yyyy-MM-dd',
-                          //   ).format(DateTime.now()),
-                          suffixIcon: IconButton(
-                            onPressed: () => _selectDate(context),
-                            icon: const Icon(Icons.calendar_month),
+                      // Account Holder Name Field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Account Holder Name (Full Name)',
+                            style: FormStyles.labelStyle,
                           ),
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectDate(context),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select date of birth';
-                          }
-                          return null;
-                        },
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _nameController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'ex. Juan Dela Cruz',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please Enter Your Account Holder Name';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: const InputDecoration(
-                          labelText: 'Contact Number',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.phone),
-                        ),
-                        keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter contact number';
-                          }
-                          return null;
-                        },
+                      // Date of Birth Field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Date of Birth',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _dobController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              // labelText: 'Date of Birth',
+                              // prefixIcon: const Icon(Icons.calendar_today),
+                              //   hintText: DateFormat(
+                              //     'yyyy-MM-dd',
+                              //   ).format(DateTime.now()),
+                              hintText: 'YYYY-MM-DD',
+                              suffixIcon: IconButton(
+                                onPressed: () => _selectDate(context),
+                                icon: const Icon(Icons.calendar_month),
+                                color: Color(0xFF044E42),
+                              ),
+                            ),
+                            readOnly: true,
+                            onTap: () => _selectDate(context),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select date of birth';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email Address',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter email address';
-                          } else if (!RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          ).hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
+                      // Contact Number Field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Contact Number',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _phoneController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Contact Number',
+                              // prefixIcon: Icon(Icons.phone),
+                            ),
+                            keyboardType: TextInputType.phone,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter contact number';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _addressController,
-                        decoration: const InputDecoration(
-                          labelText: 'Home Address',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.home),
-                        ),
-                        maxLines: 2,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter home address';
-                          }
-                          return null;
-                        },
+                      // Registered Email Address Field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Email Address',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _emailController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Email Address',
+                              // prefixIcon: Icon(Icons.email),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter email address';
+                              } else if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
+                                return 'Please enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
+                      const SizedBox(height: 16),
+
+                      // Registered Address Field
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Home Address',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _addressController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Home Address',
+                              // prefixIcon: Icon(Icons.home),
+                            ),
+                            maxLines: 3,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter home address';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 24),
 
-                      // Loan Account Form Infromation Section
+                      // ----------------------------------------------------
+                      // LOAN ACCOUNT INFORMATION SECTION
+                      // ----------------------------------------------------
                       _buildSectionHeader('Loan Account Information'),
                       const SizedBox(height: 16),
 
                       // Bank Dropdown
-                      DropdownButtonFormField2<String>(
-                        value: _selectedBank,
-                        decoration: const InputDecoration(
-                          labelText: 'Bank Name',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.account_balance),
-                        ),
-                        items:
-                            _banks.map((String bank) {
-                              return DropdownMenuItem(
-                                value: bank,
-                                child: Text(bank),
-                              );
-                            }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedBank = newValue;
-                            _selectedLoanType = null;
-                          });
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Associated Bank',
+                            style: FormStyles.labelStyle,
+                          ),
 
-                          if (newValue != null) {
-                            _fetchLoanProducts(newValue);
-                          }
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a bank';
-                          }
-                          return null;
-                        },
-                        isExpanded: true,
-                        dropdownStyleData: DropdownStyleData(
-                          maxHeight: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
-                          ),
-                        ),
-                        iconStyleData: const IconStyleData(
-                          icon: Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.green,
-                          ),
-                        ),
-                        buttonStyleData: const ButtonStyleData(
-                          padding: EdgeInsets.only(right: 12),
-                        ),
-                        menuItemStyleData: MenuItemStyleData(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          selectedMenuItemBuilder: (context, child) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.green.withAlpha(51),
+                          const SizedBox(height: 2),
+
+                          // DropdownField
+                          DropdownButtonFormField2<String>(
+                            isExpanded: true,
+
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: child,
-                            );
-                          },
-                        ),
-                        dropdownSearchData: DropdownSearchData(
-                          searchController: _searchDataDropDownController,
-                          searchInnerWidgetHeight: 50,
-                          searchInnerWidget: Container(
-                            height: 50,
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                              bottom: 4,
-                              right: 8,
-                              left: 8,
                             ),
-                            child: TextFormField(
-                              expands: true,
-                              maxLines: null,
-                              controller: _searchDataDropDownController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                hintText: 'Search Bank',
-                                hintStyle: const TextStyle(fontSize: 12),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+
+                            hint: Text(
+                              'Choose Associated Bank',
+                              style: FormStyles.hintStyle,
+                            ),
+
+                            items:
+                                _banks.map((String bank) {
+                                  return DropdownMenuItem(
+                                    value: bank,
+                                    child: Text(
+                                      bank,
+                                      style: FormStyles.inputTextStyle,
+                                    ),
+                                  );
+                                }).toList(),
+
+                            value: _selectedBank,
+
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedBank = newValue;
+                                _selectedLoanType = null;
+                              });
+
+                              if (newValue != null) {
+                                _fetchLoanProducts(newValue);
+                              }
+                            },
+
+                            dropdownStyleData: DropdownStyleData(
+                              maxHeight: 250,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                              ),
+                              offset: const Offset(0, -12),
+                            ),
+
+                            iconStyleData: const IconStyleData(
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: Color(0xFF044E42),
                               ),
                             ),
+
+                            buttonStyleData: const ButtonStyleData(
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                              width: double.infinity,
+                            ),
+
+                            menuItemStyleData: MenuItemStyleData(
+                              selectedMenuItemBuilder: (context, child) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF044E42).withAlpha(51),
+                                  ),
+                                  child: child,
+                                );
+                              },
+                            ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a bank';
+                              }
+                              return null;
+                            },
+
+                            dropdownSearchData: DropdownSearchData(
+                              searchController: _searchDataDropDownController,
+                              searchInnerWidgetHeight: 70,
+                              searchInnerWidget: Container(
+                                height: 70,
+                                padding: EdgeInsets.all(8),
+                                child: TextFormField(
+                                  style: FormStyles.inputTextStyle,
+                                  expands: true,
+                                  maxLines: null,
+                                  controller: _searchDataDropDownController,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    hintText: 'Search Bank',
+                                    hintStyle: FormStyles.hintStyle,
+
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF06D6A0),
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              searchMatchFn: (item, searchValue) {
+                                return item.value
+                                    .toString()
+                                    .toLowerCase()
+                                    .contains(searchValue.toLowerCase());
+                              },
+                            ),
+
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+                            onMenuStateChange: (isOpen) {
+                              if (!isOpen) {
+                                _searchDataDropDownController.clear();
+                              }
+                            },
                           ),
-                          searchMatchFn: (item, searchValue) {
-                            return item.value.toString().toLowerCase().contains(
-                              searchValue.toLowerCase(),
-                            );
-                          },
-                        ),
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                        ),
-                        onMenuStateChange: (isOpen) {
-                          if (!isOpen) {
-                            _searchDataDropDownController.clear();
-                          }
-                        },
+                        ],
                       ),
-                      const SizedBox(height: 16),
+
+                      SizedBox(height: 16),
 
                       // Loan Dropdown
-                      DropdownButtonFormField2<String>(
-                        value: _selectedLoanType,
-                        decoration: const InputDecoration(
-                          labelText: 'Loan Type',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
-                        ),
-                        items:
-                            _loanTypes.map((String type) {
-                              return DropdownMenuItem<String>(
-                                value: type,
-                                child: Text(type),
-                              );
-                            }).toList(),
-                        onChanged:
-                            _isLoanTypesLoading
-                                ? null
-                                : (String? newValue) {
-                                  setState(() {
-                                    _selectedLoanType = newValue;
-                                  });
-                                },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a loan type';
-                          }
-                          return null;
-                        },
-                        isExpanded: true,
-                        dropdownStyleData: DropdownStyleData(
-                          maxHeight: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
-                          ),
-                        ),
-                        iconStyleData: const IconStyleData(
-                          icon: Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.green,
-                          ),
-                        ),
-                        buttonStyleData: const ButtonStyleData(
-                          padding: EdgeInsets.only(right: 12),
-                        ),
-                        menuItemStyleData: MenuItemStyleData(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          selectedMenuItemBuilder: (context, child) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.green.withAlpha(51),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Loan Type', style: FormStyles.labelStyle),
+
+                          const SizedBox(height: 2),
+
+                          // DropdownField
+                          DropdownButtonFormField2<String>(
+                            isExpanded: true,
+
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: child,
-                            );
-                          },
-                        ),
-                        dropdownSearchData: DropdownSearchData(
-                          searchController: _searchDataDropDownController,
-                          searchInnerWidgetHeight: 50,
-                          searchInnerWidget: Container(
-                            height: 50,
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                              bottom: 4,
-                              right: 8,
-                              left: 8,
                             ),
-                            child: TextFormField(
-                              expands: true,
-                              maxLines: null,
-                              controller: _searchDataDropDownController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 8,
+
+                            hint: Text(
+                              'Choose Loan Type',
+                              style: FormStyles.hintStyle,
+                            ),
+
+                            items:
+                                _loanTypes.map((String type) {
+                                  return DropdownMenuItem<String>(
+                                    value: type,
+                                    child: Text(
+                                      type,
+                                      style: FormStyles.inputTextStyle,
+                                    ),
+                                  );
+                                }).toList(),
+
+                            value: _selectedLoanType,
+
+                            onChanged:
+                                _isLoanTypesLoading
+                                    ? null
+                                    : (String? newValue) {
+                                      setState(() {
+                                        _selectedLoanType = newValue;
+                                      });
+                                    },
+
+                            dropdownStyleData: DropdownStyleData(
+                              maxHeight: 250,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                              ),
+                              offset: const Offset(0, -12),
+                            ),
+
+                            iconStyleData: const IconStyleData(
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: Color(0xFF044E42),
+                              ),
+                            ),
+
+                            buttonStyleData: const ButtonStyleData(
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                              width: double.infinity,
+                            ),
+
+                            menuItemStyleData: MenuItemStyleData(
+                              selectedMenuItemBuilder: (context, child) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF044E42).withAlpha(51),
+                                  ),
+                                  child: child,
+                                );
+                              },
+                            ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a loan type';
+                              }
+                              return null;
+                            },
+
+                            dropdownSearchData: DropdownSearchData(
+                              searchController: _searchDataDropDownController,
+                              searchInnerWidgetHeight: 70,
+                              searchInnerWidget: Container(
+                                height: 70,
+                                padding: EdgeInsets.all(8),
+                                child: TextFormField(
+                                  expands: true,
+                                  maxLines: null,
+                                  controller: _searchDataDropDownController,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    hintText: 'Search Loan Type',
+                                    hintStyle: FormStyles.hintStyle,
+
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF06D6A0),
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                hintText: 'Search Loan Type',
-                                hintStyle: const TextStyle(fontSize: 12),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                              ),
+
+                              searchMatchFn: (item, searchValue) {
+                                return item.value
+                                    .toString()
+                                    .toLowerCase()
+                                    .contains(searchValue.toLowerCase());
+                              },
+                            ),
+
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+
+                            onMenuStateChange: (isOpen) {
+                              if (!isOpen) {
+                                _searchDataDropDownController.clear();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+                      // Loan Account Number
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Account Number', style: FormStyles.labelStyle),
+
+                          SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _accountNumberController,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Loan Account Number',
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _accountNumberVisible =
+                                        !_accountNumberVisible;
+                                  });
+                                },
+                                icon: Icon(
+                                  _accountNumberVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Color(0xFF044E42),
                                 ),
                               ),
                             ),
-                          ),
-                          searchMatchFn: (item, searchValue) {
-                            return item.value.toString().toLowerCase().contains(
-                              searchValue.toLowerCase(),
-                            );
-                          },
-                        ),
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                        ),
-                        onMenuStateChange: (isOpen) {
-                          if (!isOpen) {
-                            _searchDataDropDownController.clear();
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _accountNumberController,
-                        decoration: InputDecoration(
-                          labelText: 'Loan Account Number',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.numbers),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _accountNumberVisible = !_accountNumberVisible;
-                              });
+                            obscureText: !_accountNumberVisible,
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter account number';
+                              }
+                              return null;
                             },
-                            icon: Icon(
-                              _accountNumberVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
-                            ),
                           ),
-                        ),
-                        obscureText: !_accountNumberVisible,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter loan account number';
-                          }
-                          return null;
-                        },
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _loanTermController,
-                        decoration: const InputDecoration(
-                          labelText: 'Loan Term (months)',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.date_range),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter loan term';
-                          }
-                          return null;
-                        },
+                      // Loan Term (in months)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Loan Term (Months)',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _loanTermController,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Loan Term (months)',
+                              //   prefixIcon: Icon(Icons.date_range),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter loan term';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Last Transaction Number Field
-                      TextFormField(
-                        controller: _transactionIdController,
-                        decoration: const InputDecoration(
-                          labelText: 'Last Loan Payment ID Transaction',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.receipt_long),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter last payment transcation ID';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Last Loan Payment ID Transaction',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _transactionIdController,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Last Loan Payment ID Transaction',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter last payment transcation ID';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 32),
@@ -552,20 +725,23 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
                       SizedBox(
                         width: double.infinity,
                         height: 50,
-                        child: ElevatedButton(
-                          onPressed: _submitForm,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade700,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: Customgradients.iconGradient,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            'Add Loan Account',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          child: ElevatedButton(
+                            onPressed: _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Add Loan Account',
+                              style: FormStyles.submitFormButtonLabel,
                             ),
                           ),
                         ),
@@ -581,15 +757,8 @@ class _AddingAccountLoansPageState extends State<AddingAccountLoansPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-        const Divider(thickness: 1),
+        Text(title, style: FormStyles.sectionHeaderStyle),
+        Divider(thickness: 1, color: const Color(0xFF1a1819).withAlpha(128)),
       ],
     );
   }

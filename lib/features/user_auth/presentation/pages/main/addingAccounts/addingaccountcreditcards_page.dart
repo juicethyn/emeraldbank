@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/adding_account_form_appbar.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/text_style.dart';
 
 class AddingAccountCreditCardsPage extends StatefulWidget {
   const AddingAccountCreditCardsPage({super.key});
@@ -143,7 +146,7 @@ class _AddingAccountCreditCardsPage
     );
     if (picked != null) {
       setState(() {
-        _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dobController.text = DateFormat('MM/dd/yyyy').format(picked);
       });
     }
   }
@@ -163,10 +166,7 @@ class _AddingAccountCreditCardsPage
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Credit Card Account'),
-        backgroundColor: Colors.green.shade700,
-      ),
+      appBar: const AddingAccountFormAppbar(title: 'Add Credit Card Account'),
 
       body:
           _isLoading
@@ -178,446 +178,618 @@ class _AddingAccountCreditCardsPage
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Personal Information Form Section
+                      // ----------------------------------------------------
+                      // PERSONAL INFORMATION SECTION
+                      // ----------------------------------------------------
                       _buildSectionHeader('Personal Information'),
                       const SizedBox(height: 16),
 
                       // Account Holder Name Field
-                      TextFormField(
-                        controller: _nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Account Holder Name',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.person),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please Enter Your Account Holder Name';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Account Holder Name (Full Name)',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _nameController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'ex. Juan Dela Cruz',
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please Enter Your Account Holder Name';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Date of Birth Field
-                      TextFormField(
-                        controller: _dobController,
-                        decoration: InputDecoration(
-                          labelText: 'Date of Birth',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.calendar_today),
-                          //   hintText: DateFormat(
-                          //     'yyyy-MM-dd',
-                          //   ).format(DateTime.now()),
-                          suffixIcon: IconButton(
-                            onPressed: () => _selectDate(context),
-                            icon: const Icon(Icons.calendar_month),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Date of Birth',
+                            style: FormStyles.labelStyle,
                           ),
-                        ),
-                        readOnly: true,
-                        onTap: () => _selectDate(context),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select date of birth';
-                          }
-                          return null;
-                        },
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _dobController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              // labelText: 'Date of Birth',
+                              // prefixIcon: const Icon(Icons.calendar_today),
+                              //   hintText: DateFormat(
+                              //     'yyyy-MM-dd',
+                              //   ).format(DateTime.now()),
+                              hintText: 'YYYY-MM-DD',
+                              suffixIcon: IconButton(
+                                onPressed: () => _selectDate(context),
+                                icon: const Icon(Icons.calendar_month),
+                                color: Color(0xFF044E42),
+                              ),
+                            ),
+                            readOnly: true,
+                            onTap: () => _selectDate(context),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select date of birth';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Contact Number Field
-                      TextFormField(
-                        controller: _phoneController,
-                        decoration: const InputDecoration(
-                          labelText: 'Contact Number',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.phone),
-                        ),
-                        keyboardType: TextInputType.phone,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter contact number';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Contact Number',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _phoneController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Contact Number',
+                              // prefixIcon: Icon(Icons.phone),
+                            ),
+                            keyboardType: TextInputType.phone,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter contact number';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Registered Email Address Field
-                      TextFormField(
-                        controller: _emailController,
-                        decoration: const InputDecoration(
-                          labelText: 'Email Address',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.email),
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter email address';
-                          } else if (!RegExp(
-                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                          ).hasMatch(value)) {
-                            return 'Please enter a valid email address';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Email Address',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _emailController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Email Address',
+                              // prefixIcon: Icon(Icons.email),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter email address';
+                              } else if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
+                                return 'Please enter a valid email address';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Registered Address Field
-                      TextFormField(
-                        controller: _addressController,
-                        decoration: const InputDecoration(
-                          labelText: 'Home Address',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.home),
-                        ),
-                        maxLines: 2,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter home address';
-                          }
-                          return null;
-                        },
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Home Address',
+                            style: FormStyles.labelStyle,
+                          ),
+
+                          const SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _addressController,
+                            style: FormStyles.inputTextStyle,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Home Address',
+                              // prefixIcon: Icon(Icons.home),
+                            ),
+                            maxLines: 3,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter home address';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 24),
 
+                      // ----------------------------------------------------
+                      // CREDIT CARD INFORMATION SECTION
+                      // ----------------------------------------------------
                       _buildSectionHeader('Credit Card Account Information'),
                       const SizedBox(height: 16),
 
                       // Bank Dropdown
-                      DropdownButtonFormField2<String>(
-                        value: _selectedBank,
-                        decoration: const InputDecoration(
-                          labelText: 'Bank Name',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.account_balance),
-                        ),
-                        items:
-                            _banks.map((String bank) {
-                              return DropdownMenuItem(
-                                value: bank,
-                                child: Text(bank),
-                              );
-                            }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedBank = newValue;
-                            _selectedCardType = null;
-                          });
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Associated Bank',
+                            style: FormStyles.labelStyle,
+                          ),
 
-                          if (newValue != null) {
-                            _fetchCreditCardProducts(newValue);
-                          }
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a bank';
-                          }
-                          return null;
-                        },
-                        isExpanded: true,
-                        dropdownStyleData: DropdownStyleData(
-                          maxHeight: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
-                          ),
-                        ),
-                        iconStyleData: const IconStyleData(
-                          icon: Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.green,
-                          ),
-                        ),
-                        buttonStyleData: const ButtonStyleData(
-                          padding: EdgeInsets.only(right: 12),
-                        ),
-                        menuItemStyleData: MenuItemStyleData(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          selectedMenuItemBuilder: (context, child) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.green.withAlpha(51),
+                          const SizedBox(height: 2),
+
+                          // DropdownField
+                          DropdownButtonFormField2<String>(
+                            isExpanded: true,
+
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: child,
-                            );
-                          },
-                        ),
-                        dropdownSearchData: DropdownSearchData(
-                          searchController: _searchDataDropDownController,
-                          searchInnerWidgetHeight: 50,
-                          searchInnerWidget: Container(
-                            height: 50,
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                              bottom: 4,
-                              right: 8,
-                              left: 8,
                             ),
-                            child: TextFormField(
-                              expands: true,
-                              maxLines: null,
-                              controller: _searchDataDropDownController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 8,
-                                ),
-                                hintText: 'Search Bank',
-                                hintStyle: const TextStyle(fontSize: 12),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+
+                            hint: Text(
+                              'Choose Associated Bank',
+                              style: FormStyles.hintStyle,
+                            ),
+
+                            items:
+                                _banks.map((String bank) {
+                                  return DropdownMenuItem(
+                                    value: bank,
+                                    child: Text(
+                                      bank,
+                                      style: FormStyles.inputTextStyle,
+                                    ),
+                                  );
+                                }).toList(),
+
+                            value: _selectedBank,
+
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _selectedBank = newValue;
+                                _selectedCardType = null;
+                              });
+
+                              if (newValue != null) {
+                                _fetchCreditCardProducts(newValue);
+                              }
+                            },
+
+                            dropdownStyleData: DropdownStyleData(
+                              maxHeight: 250,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                              ),
+                              offset: const Offset(0, -12),
+                            ),
+
+                            iconStyleData: const IconStyleData(
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: Color(0xFF044E42),
                               ),
                             ),
+
+                            buttonStyleData: const ButtonStyleData(
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                              width: double.infinity,
+                            ),
+
+                            menuItemStyleData: MenuItemStyleData(
+                              selectedMenuItemBuilder: (context, child) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF044E42).withAlpha(51),
+                                  ),
+                                  child: child,
+                                );
+                              },
+                            ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a bank';
+                              }
+                              return null;
+                            },
+
+                            dropdownSearchData: DropdownSearchData(
+                              searchController: _searchDataDropDownController,
+                              searchInnerWidgetHeight: 70,
+                              searchInnerWidget: Container(
+                                height: 70,
+                                padding: EdgeInsets.all(8),
+                                child: TextFormField(
+                                  style: FormStyles.inputTextStyle,
+                                  expands: true,
+                                  maxLines: null,
+                                  controller: _searchDataDropDownController,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    hintText: 'Search Bank',
+                                    hintStyle: FormStyles.hintStyle,
+
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF06D6A0),
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              searchMatchFn: (item, searchValue) {
+                                return item.value
+                                    .toString()
+                                    .toLowerCase()
+                                    .contains(searchValue.toLowerCase());
+                              },
+                            ),
+
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+                            onMenuStateChange: (isOpen) {
+                              if (!isOpen) {
+                                _searchDataDropDownController.clear();
+                              }
+                            },
                           ),
-                          searchMatchFn: (item, searchValue) {
-                            return item.value.toString().toLowerCase().contains(
-                              searchValue.toLowerCase(),
-                            );
-                          },
-                        ),
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                        ),
-                        onMenuStateChange: (isOpen) {
-                          if (!isOpen) {
-                            _searchDataDropDownController.clear();
-                          }
-                        },
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
-                      // CreditCard Dropdown
-                      DropdownButtonFormField2<String>(
-                        value: _selectedCardType,
-                        decoration: const InputDecoration(
-                          labelText: 'Credit Card Type',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.category),
-                        ),
-                        items:
-                            _creditCardTypes.map((String type) {
-                              return DropdownMenuItem<String>(
-                                value: type,
-                                child: Text(type),
-                              );
-                            }).toList(),
-                        onChanged:
-                            _isCardTypesLoading
-                                ? null
-                                : (String? newValue) {
-                                  setState(() {
-                                    _selectedCardType = newValue;
-                                  });
-                                },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a loan type';
-                          }
-                          return null;
-                        },
-                        isExpanded: true,
-                        dropdownStyleData: DropdownStyleData(
-                          maxHeight: 200,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
+                      // Credit Card Type Dropdown
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Credit Card Type',
+                            style: FormStyles.labelStyle,
                           ),
-                        ),
-                        iconStyleData: const IconStyleData(
-                          icon: Icon(
-                            Icons.arrow_drop_down,
-                            color: Colors.green,
-                          ),
-                        ),
-                        buttonStyleData: const ButtonStyleData(
-                          padding: EdgeInsets.only(right: 12),
-                        ),
-                        menuItemStyleData: MenuItemStyleData(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          selectedMenuItemBuilder: (context, child) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                color: Colors.green.withAlpha(51),
+
+                          const SizedBox(height: 2),
+
+                          // DropdownField
+                          DropdownButtonFormField2<String>(
+                            isExpanded: true,
+
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: child,
-                            );
-                          },
-                        ),
-                        dropdownSearchData: DropdownSearchData(
-                          searchController: _searchDataDropDownController,
-                          searchInnerWidgetHeight: 50,
-                          searchInnerWidget: Container(
-                            height: 50,
-                            padding: const EdgeInsets.only(
-                              top: 8,
-                              bottom: 4,
-                              right: 8,
-                              left: 8,
                             ),
-                            child: TextFormField(
-                              expands: true,
-                              maxLines: null,
-                              controller: _searchDataDropDownController,
-                              decoration: InputDecoration(
-                                isDense: true,
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 8,
-                                ),
-                                hintText: 'Search Savings Type',
-                                hintStyle: const TextStyle(fontSize: 12),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
+
+                            hint: Text(
+                              'Choose Credit Card Type',
+                              style: FormStyles.hintStyle,
+                            ),
+
+                            items:
+                                _creditCardTypes.map((String type) {
+                                  return DropdownMenuItem<String>(
+                                    value: type,
+                                    child: Text(
+                                      type,
+                                      style: FormStyles.inputTextStyle,
+                                    ),
+                                  );
+                                }).toList(),
+
+                            value: _selectedCardType,
+
+                            onChanged:
+                                _isCardTypesLoading
+                                    ? null
+                                    : (String? newValue) {
+                                      setState(() {
+                                        _selectedCardType = newValue;
+                                      });
+                                    },
+
+                            dropdownStyleData: DropdownStyleData(
+                              maxHeight: 250,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: Colors.white,
+                              ),
+                              offset: const Offset(0, -12),
+                            ),
+
+                            iconStyleData: const IconStyleData(
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: Color(0xFF044E42),
                               ),
                             ),
+
+                            buttonStyleData: const ButtonStyleData(
+                              padding: EdgeInsets.symmetric(horizontal: 0),
+                              width: double.infinity,
+                            ),
+
+                            menuItemStyleData: MenuItemStyleData(
+                              selectedMenuItemBuilder: (context, child) {
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF044E42).withAlpha(51),
+                                  ),
+                                  child: child,
+                                );
+                              },
+                            ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a loan type';
+                              }
+                              return null;
+                            },
+
+                            dropdownSearchData: DropdownSearchData(
+                              searchController: _searchDataDropDownController,
+                              searchInnerWidgetHeight: 70,
+                              searchInnerWidget: Container(
+                                height: 70,
+                                padding: EdgeInsets.all(8),
+                                child: TextFormField(
+                                  expands: true,
+                                  maxLines: null,
+                                  controller: _searchDataDropDownController,
+                                  decoration: InputDecoration(
+                                    isDense: true,
+                                    hintText: 'Search Credit Card Type',
+                                    hintStyle: FormStyles.hintStyle,
+
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF06D6A0),
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              searchMatchFn: (item, searchValue) {
+                                return item.value
+                                    .toString()
+                                    .toLowerCase()
+                                    .contains(searchValue.toLowerCase());
+                              },
+                            ),
+
+                            style: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+
+                            onMenuStateChange: (isOpen) {
+                              if (!isOpen) {
+                                _searchDataDropDownController.clear();
+                              }
+                            },
                           ),
-                          searchMatchFn: (item, searchValue) {
-                            return item.value.toString().toLowerCase().contains(
-                              searchValue.toLowerCase(),
-                            );
-                          },
-                        ),
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 16,
-                        ),
-                        onMenuStateChange: (isOpen) {
-                          if (!isOpen) {
-                            _searchDataDropDownController.clear();
-                          }
-                        },
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Account Number Field
-                      TextFormField(
-                        controller: _accountNumberController,
-                        decoration: InputDecoration(
-                          labelText: 'Account Number',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.tag),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _accountNumberVisible = !_accountNumberVisible;
-                              });
-                            },
-                            icon: Icon(
-                              _accountNumberVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Account Number', style: FormStyles.labelStyle),
+
+                          SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _accountNumberController,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Account Number',
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _accountNumberVisible =
+                                        !_accountNumberVisible;
+                                  });
+                                },
+                                icon: Icon(
+                                  _accountNumberVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Color(0xFF044E42),
+                                ),
+                              ),
                             ),
+                            obscureText: !_accountNumberVisible,
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter account number';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                        obscureText: !_accountNumberVisible,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter account number';
-                          }
-                          return null;
-                        },
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // Credit Card Number Field
-                      TextFormField(
-                        controller: _creditCardNumberController,
-                        decoration: InputDecoration(
-                          labelText: 'Credit Card Number',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.tag),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _creditCardNumberVisible =
-                                    !_creditCardNumberVisible;
-                              });
-                            },
-                            icon: Icon(
-                              _creditCardNumberVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
-                            ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Credit Card Number',
+                            style: FormStyles.labelStyle,
                           ),
-                        ),
-                        obscureText: !_creditCardNumberVisible,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter account number';
-                          }
-                          return null;
-                        },
+
+                          SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _creditCardNumberController,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'Credit Card Number',
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _creditCardNumberVisible =
+                                        !_creditCardNumberVisible;
+                                  });
+                                },
+                                icon: Icon(
+                                  _creditCardNumberVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Color(0xFF044E42),
+                                ),
+                              ),
+                            ),
+                            obscureText: !_creditCardNumberVisible,
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter account number';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 16),
 
                       // CVV/CVC
-                      TextFormField(
-                        controller: _cvvcvc,
-                        decoration: InputDecoration(
-                          labelText: 'CVV / CVC',
-                          border: const OutlineInputBorder(),
-                          prefixIcon: const Icon(Icons.tag),
-                          suffixIcon: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _cvvVisible = !_cvvVisible;
-                              });
-                            },
-                            icon: Icon(
-                              _cvvVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
-                              color: Colors.grey,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('CVV/CVC Code', style: FormStyles.labelStyle),
+
+                          SizedBox(height: 2),
+
+                          TextFormField(
+                            controller: _cvvcvc,
+                            decoration: FormStyles.textFieldDecoration(
+                              hintText: 'CVV / CVC',
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _cvvVisible = !_cvvVisible;
+                                  });
+                                },
+                                icon: Icon(
+                                  _cvvVisible
+                                      ? Icons.visibility
+                                      : Icons.visibility_off,
+                                  color: Color(0xFF044E42),
+                                ),
+                              ),
                             ),
+                            obscureText: !_cvvVisible,
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter valid cvv/cvc code';
+                              }
+                              if (value.length < 3 || value.length > 4) {
+                                return 'CVV/CVC must be 3 or 4 digits';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                        obscureText: !_cvvVisible,
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter valid cvv/cvc code';
-                          }
-                          if (value.length < 3 || value.length > 4) {
-                            return 'CVV/CVC must be 3 or 4 digits';
-                          }
-                          return null;
-                        },
+                        ],
                       ),
 
                       const SizedBox(height: 32),
 
                       SizedBox(
                         width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: _submitForm,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade700,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: Customgradients.iconGradient,
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
-                            'Add Credit Card Account',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          child: ElevatedButton(
+                            onPressed: _submitForm,
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Add Credit Card Account',
+                              style: FormStyles.submitFormButtonLabel,
                             ),
                           ),
                         ),
@@ -633,15 +805,8 @@ class _AddingAccountCreditCardsPage
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-        const Divider(thickness: 1),
+        Text(title, style: FormStyles.sectionHeaderStyle),
+        Divider(thickness: 1, color: const Color(0xFF1a1819).withAlpha(128)),
       ],
     );
   }
