@@ -1,6 +1,6 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/authentication/otp_verification_page.dart';
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/sign_up_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/sign_up_choose_card.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/form_container_widget.dart';
 import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -119,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(width: 5),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpPage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpChooseCard()));
                     },
                     child: Text(
                       "Sign Up",

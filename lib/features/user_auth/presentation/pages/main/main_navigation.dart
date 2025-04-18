@@ -96,15 +96,18 @@ class _MainNavigationState extends State<MainNavigation> {
       ProfilePage(),
     ];
 
-    return Scaffold(
+    final bool isDarkMode = _selectedIndex == 2;
+
+  return Scaffold(
+      backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white, // Dark background for portfolio
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
         elevation: 0,
         title: Text(
-          'Hi ${currentUser?.accountNickName}',  // Show email when currentUser is available
-          style: const TextStyle(
-            color: Color(0xFF1A1819),
-            fontSize: 20,
+          'Hello, ${currentUser?.accountNickName ?? "User"}!',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Color(0xFF1A1819),
+            fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -115,11 +118,12 @@ class _MainNavigationState extends State<MainNavigation> {
               'lib/assets/icons/update_notification_icon.svg',
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(
+                isDarkMode ? Color(0xFF06D6A0) : Color(0xFF1A1819),
+                BlendMode.srcIn,
+              ),
             ),
-            onPressed: () {
-              // Navigate to notifications
-            },
+            onPressed: () {},
           ),
           const SizedBox(width: 8),
           IconButton(
@@ -127,71 +131,57 @@ class _MainNavigationState extends State<MainNavigation> {
               'lib/assets/icons/transaction_notification_icon.svg',
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(
+                isDarkMode ? Color(0xFF06D6A0) : Color(0xFF1A1819),
+                BlendMode.srcIn,
+              ),
             ),
-            onPressed: () {
-              // Navigate to updates
-            },
+            onPressed: () {},
           ),
           const SizedBox(width: 16),
         ],
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         selectedItemColor: Color(0xFF06D6A0),
-        unselectedItemColor: Color(0xFF1A1819),
-        selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
-        unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.black),
+        unselectedItemColor: isDarkMode ? Colors.white70 : Color(0xFF1A1819),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: isDarkMode ? Colors.white : Colors.black,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: isDarkMode ? Colors.white70 : Colors.black,
+        ),
         items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 30,
-              height: 30,
-              child: SvgPicture.asset(
-                'lib/assets/icons/home_icon.svg',
-                colorFilter: _selectedIndex == 0 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-              ),
-            ),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 30,
-              height: 30,
-              child: SvgPicture.asset(
-                'lib/assets/icons/account_icon.svg',
-                colorFilter: _selectedIndex == 1 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-              ),
-            ),
-            label: 'Accounts',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 30,
-              height: 30,
-              child: SvgPicture.asset(
-                'lib/assets/icons/investment_icon.svg',
-                colorFilter: _selectedIndex == 2 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-              ),
-            ),
-            label: 'Portfolio',
-          ),
-          BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 30,
-              height: 30,
-              child: SvgPicture.asset(
-                'lib/assets/icons/profile_icon.svg',
-                colorFilter: _selectedIndex == 3 ? ColorFilter.mode(Color(0xFF06D6A0), BlendMode.srcIn) : ColorFilter.mode(Color(0xFF1A1819), BlendMode.srcIn),
-              ),
-            ),
-            label: 'Profile',
-          ),
+          _navItem('Home', 'lib/assets/icons/home_icon.svg', 0, isDarkMode),
+          _navItem('Accounts', 'lib/assets/icons/account_icon.svg', 1, isDarkMode),
+          _navItem('Portfolio', 'lib/assets/icons/investment_icon.svg', 2, isDarkMode),
+          _navItem('Profile', 'lib/assets/icons/profile_icon.svg', 3, isDarkMode),
         ],
       ),
+    );
+  }
+  BottomNavigationBarItem _navItem(String label, String asset, int index, bool isDarkMode) {
+    return BottomNavigationBarItem(
+      icon: SizedBox(
+        width: 30,
+        height: 30,
+        child: SvgPicture.asset(
+          asset,
+          colorFilter: ColorFilter.mode(
+            _selectedIndex == index ? Color(0xFF06D6A0) : (isDarkMode ? Colors.white : Color(0xFF1A1819)),
+            BlendMode.srcIn,
+          ),
+        ),
+      ),
+      label: label,
     );
   }
 }

@@ -1,10 +1,9 @@
 
 
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
+import 'package:emeraldbank_mobileapp/global/common/shortcuts_data.dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:flutter/material.dart';
@@ -31,39 +30,29 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<String> selectedKeys = []; // This will hold the selected shortcut keys
+  late List<Map<String, dynamic>> visibleShortcuts;
 
-  final List<Map<String, dynamic>> items = [
-    {
-      'image': 'lib/assets/shortcuts_icon/send.png',
-      'text': 'Send',
-      'onTap': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SendPage()),
-        );
-      },
-    },
-    {
-      'image': 'lib/assets/shortcuts_icon/bills.png',
-      'text': 'Bills',
-      'onTap': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => BillsPage()),
-        );
-      },
-    },
-    {
-      'image': 'lib/assets/shortcuts_icon/more.png',
-      'text': 'More',
-      'onTap': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SendPage()),
-        );
-      },
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Initialize visibleShortcuts based on selectedKeys
+    selectedKeys = ['send','bills','games','more'];
+
+    visibleShortcuts = allShortcuts
+        .where((item) => selectedKeys.contains(item['key']))
+        .toList();
+  }
+
+  // Callback to update selectedKeys when customization is made
+  void updateSelectedKeys(List<String> updatedKeys) {
+    setState(() {
+      selectedKeys = updatedKeys;
+      visibleShortcuts = allShortcuts
+          .where((item) => selectedKeys.contains(item['key']))
+          .toList();
+    });
+  }
 
   String formatAccountNumber(String accountNumber) {
     final cleaned = accountNumber.replaceAll(RegExp(r'\D'), ''); // Remove non-digits
@@ -82,6 +71,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     UserModel? user = widget.user;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -109,6 +99,7 @@ class _HomePageState extends State<HomePage> {
                             showSnackbarMessage(context, "Credits under Development");
                           },
                           horizontalPadding: 35,
+                          backgroundColor: Color.fromARGB(255, 237, 237, 237),
                           ),
                         SizedBox(width: 12),
                         HomeTextButtonWidget(
@@ -117,6 +108,7 @@ class _HomePageState extends State<HomePage> {
                             showSnackbarMessage(context, "Loan is under Development");
                           },
                           horizontalPadding: 40,
+                          backgroundColor: Color.fromARGB(255, 237, 237, 237),
                           ),
                       ],
                     ),
@@ -272,10 +264,11 @@ class _HomePageState extends State<HomePage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                  widget.isCardHidden ? "•••• •••• •••• ••••" : user?.accountNumber != null ? formatAccountNumber(user!.accountNumber) : '',
+                                  widget.isCardHidden ? "•••• •••• •••• ${user?.accountNumber.substring(user.accountNumber.length - 4)}" 
+                                  : user?.accountNumber != null ? formatAccountNumber(user!.accountNumber) : '',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 24,
+                                    fontSize: 21,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 2,
                                   ),
@@ -386,8 +379,22 @@ class _HomePageState extends State<HomePage> {
                     alignment: Alignment.bottomRight,
                     child: TextButton(
                       onPressed:
-                        () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => CustomizePage()));
+                        () async {
+                      final updatedShortcuts = await Navigator.push(context, MaterialPageRoute(builder: (context) => 
+                      CustomizePage(
+                        selectedShortcuts: visibleShortcuts,
+                        allShortcuts: allShortcuts,
+                      )
+                      )
+                      );
+                      if (updatedShortcuts != null) {
+                        setState(() {
+                          selectedKeys = List<String>.from(updatedShortcuts); // safely cast to List<String>
+                          visibleShortcuts = allShortcuts
+                              .where((item) => selectedKeys.contains(item['key']))
+                              .toList();
+                        });
+                      }
                     },
                       child: Text("Customize",
                       style: TextStyle(
@@ -407,10 +414,11 @@ class _HomePageState extends State<HomePage> {
                   spacing: 8,
                   runSpacing: 8,
                   alignment: WrapAlignment.start,
-                  children: List.generate(items.length, (index) {
-                    String imagePath = items[index]['image']!;
-                    String text = items[index]['text']!;
-                    final onTapCallback = items[index]['onTap'] as void Function(BuildContext);
+                  children: List.generate(visibleShortcuts.length, (index) {
+                    String imagePath = visibleShortcuts[index]['image']!;
+                    String text = visibleShortcuts[index]['text']!;
+                    final onTapCallback = visibleShortcuts[index]['onTap']
+                    as void Function(BuildContext);
 
                     return ShortcutButton(
                       imagePath: imagePath, 
