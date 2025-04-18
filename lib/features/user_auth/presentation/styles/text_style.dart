@@ -70,3 +70,33 @@ class FormStyles {
     );
   }
 }
+
+class AccountCardStyles {
+  static const TextStyle balanceHolderLabel = TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+
+  static const TextStyle associatedBankLabel = TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 14,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+  );
+
+  static const TextStyle accountTypeLabel = TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 12,
+    fontWeight: FontWeight.bold,
+    color: Colors.black,
+  );
+
+  static const TextStyle accountDetails = TextStyle(
+    fontFamily: 'Montserrat',
+    fontSize: 10,
+    fontWeight: FontWeight.w600,
+    color: Colors.black,
+  );
+}

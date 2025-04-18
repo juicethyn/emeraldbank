@@ -8,4 +8,11 @@ class Customgradients {
 
     stops: [0.0, 0.5, 1.0],
   );
+
+  static const LinearGradient cardAccountGradient = LinearGradient(
+    begin: Alignment(-1.0, -1.0),
+    end: Alignment(1.0, 1.0),
+    colors: [Color(0xFF00D4FF), Color(0xFF06D6A0), Color(0xFF06D6A0)],
+    stops: [0.0, 0.67, 1.0],
+  );
 }
