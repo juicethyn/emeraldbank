@@ -1,4 +1,5 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
 
 class VirtualCardWidget extends StatelessWidget {
@@ -22,57 +23,6 @@ class VirtualCardWidget extends StatelessWidget {
     required this.isHidden,
     this.onVisibilityToggle,
   });
-
-  String _formatAccountAndCardNumber(String number) {
-    final digitsOnly = number.replaceAll(RegExp(r'[^\d]'), '');
-
-    final buffer = StringBuffer();
-    for (int i = 0; i < digitsOnly.length; i++) {
-      if (i > 0 && i % 4 == 0) {
-        buffer.write(' ');
-      }
-      buffer.write(digitsOnly[i]);
-    }
-    return buffer.toString();
-  }
-
-  String _hideAccountAndCardNumber(String number) {
-    final digitsOnly = number.replaceAll(RegExp(r'[^\d]'), '');
-
-    if (digitsOnly.length <= 4) {
-      return digitsOnly;
-    }
-
-    final visiblePart = digitsOnly.substring(digitsOnly.length - 4);
-    final hiddenGroups = (digitsOnly.length - 4) ~/ 4;
-    final remainingHidden = (digitsOnly.length - 4) % 4;
-
-    final buffer = StringBuffer();
-    for (int i = 0; i < hiddenGroups; i++) {
-      buffer.write('**** ');
-    }
-
-    if (remainingHidden > 0) {
-      buffer.write('*' * remainingHidden + ' ');
-    }
-
-    buffer.write(visiblePart);
-    return buffer.toString();
-  }
-
-  String _maskName(String name) {
-    final parts = name.split(' ');
-    String masked = '';
-
-    for (var part in parts) {
-      if (part.length <= 1) {
-        masked += '$part ';
-      } else {
-        masked += '${part[0]}*** ';
-      }
-    }
-    return masked.trim();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,8 +125,8 @@ class VirtualCardWidget extends StatelessWidget {
                     children: [
                       Text(
                         isHidden
-                            ? _hideAccountAndCardNumber(accountNumber)
-                            : _formatAccountAndCardNumber(accountNumber),
+                            ? hideAccountNumber(accountNumber)
+                            : formatAccountNumber(accountNumber),
                         style: const TextStyle(
                           fontFamily: 'Fira Code',
                           fontSize: 16,
@@ -254,7 +204,7 @@ class VirtualCardWidget extends StatelessWidget {
                     children: [
                       Text(
                         isHidden
-                            ? 'Hello! ${_maskName(accountHolderName)}'
+                            ? 'Hello! ${maskName(accountHolderName)}'
                             : 'Hello! $accountHolderName',
                         style: const TextStyle(
                           fontFamily: 'Montserrat',
@@ -266,8 +216,8 @@ class VirtualCardWidget extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         isHidden
-                            ? _hideAccountAndCardNumber(cardNumber)
-                            : _formatAccountAndCardNumber(cardNumber),
+                            ? hideAccountNumber(cardNumber)
+                            : formatAccountNumber(cardNumber),
                         style: TextStyle(
                           fontFamily: 'Montserrat',
                           fontSize: 10,

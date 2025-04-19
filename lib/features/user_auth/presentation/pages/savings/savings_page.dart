@@ -4,9 +4,9 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/savi
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountsPage_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_card_accountspages.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class SavingsPage extends StatefulWidget {
   const SavingsPage({super.key});
@@ -96,7 +96,7 @@ class _SavingsPageState extends State<SavingsPage> {
       return {
         'amount': amount.toDouble(),
         'date': date,
-        'formattedDate': _formatDate(date.toDate()),
+        'formattedDate': formatDateMMDDYYYY(date.toDate()),
         'type': txData['transactionType'] ?? 'TRANSACTION',
         'isIncoming': isIncoming,
       };
@@ -104,10 +104,6 @@ class _SavingsPageState extends State<SavingsPage> {
       print('Error fetching last transaction: $e');
       return null;
     }
-  }
-
-  String _formatDate(DateTime date) {
-    return DateFormat('MM/dd/yyyy').format(date);
   }
 
   Future<void> _fetchSavingsData() async {
@@ -175,6 +171,7 @@ class _SavingsPageState extends State<SavingsPage> {
         final accountTypeRef =
             cardData['savingsAccountInformation']['accountType'];
         String cardTypeName = 'Savings Account';
+        String? interestRate;
         if (accountTypeRef != null) {
           try {
             if (accountTypeRef is DocumentReference) {
@@ -182,6 +179,12 @@ class _SavingsPageState extends State<SavingsPage> {
               if (accountTypeDoc.exists) {
                 final data = accountTypeDoc.data() as Map<String, dynamic>;
                 cardTypeName = data['name'] ?? 'Savings Account';
+
+                if (data.containsKey('interestRate')) {
+                  interestRate = formatInterestRateDisplay(
+                    data['interestRate'],
+                  );
+                }
               }
             }
           } catch (e) {
@@ -216,7 +219,7 @@ class _SavingsPageState extends State<SavingsPage> {
         final lastTransaction = await _getLastTransaction(savingsDoc.id);
         final lastTransactionText =
             lastTransaction != null
-                ? '${lastTransaction['formattedDate']} (${lastTransaction['isIncoming'] ? '+' : '-'} ₱${lastTransaction['amount'].toStringAsFixed(2)})'
+                ? '${lastTransaction['formattedDate']} (${lastTransaction['isIncoming'] ? '+' : '-'} ${formatCurrency(lastTransaction['amount'])})'
                 : 'No transaction history';
 
         cards.add({
@@ -226,6 +229,8 @@ class _SavingsPageState extends State<SavingsPage> {
           'thirdDetail': lastTransactionText,
           'bankName': bankName,
           'docId': savingsDoc.id,
+          'interestRate': interestRate,
+          'hasInterestRate': interestRate != null,
         });
       }
 
@@ -313,11 +318,15 @@ class _SavingsPageState extends State<SavingsPage> {
                           child: AccountCard(
                             balanceHolder: card['balance'],
                             accountTypeHolder: card['accountType'],
-                            secondDetail: card['secondDetail'],
+                            secondDetail: formatAccountNumber(
+                              card['secondDetail'],
+                            ),
                             thirdDetail: card['thirdDetail'],
                             associatedName: card['bankName'],
                             isAccountNumber: true,
                             isHidden: !_eyeEnabled,
+                            hasInterestRate: card['hasInterestRate'],
+                            interestRate: card['interestRate'],
                             onTap: () {
                               Navigator.push(
                                 context,

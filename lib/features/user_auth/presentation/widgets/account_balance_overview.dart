@@ -1,11 +1,11 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:intl/intl.dart';
 
 class AccountBalanceOverview extends StatelessWidget {
   final double balance;
-  final double? interestRate;
+  final String? interestRate;
   final String balanceTitle;
   final bool isHidden;
   final VoidCallback onVisibilityToggle;
@@ -19,11 +19,6 @@ class AccountBalanceOverview extends StatelessWidget {
     required this.onVisibilityToggle,
   });
 
-  String _formatCurrency(double value) {
-    final NumberFormat numberFormat = NumberFormat('#,##0.00', 'en_US');
-    return '₱ ${numberFormat.format(value)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,8 +30,9 @@ class AccountBalanceOverview extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF044E42).withAlpha(64),
-            blurRadius: 10,
+            blurRadius: 4,
             offset: const Offset(0, 0),
+            blurStyle: BlurStyle.outer,
           ),
         ],
       ),
@@ -62,7 +58,7 @@ class AccountBalanceOverview extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    isHidden ? '₱ ××××.××' : _formatCurrency(balance),
+                    isHidden ? '₱ ××××.××' : formatCurrency(balance),
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w700,
@@ -95,11 +91,11 @@ class AccountBalanceOverview extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${interestRate!.toStringAsFixed(1)}%',
+                            interestRate!,
                             style: TextStyle(
                               fontFamily: 'Montserrat',
                               fontWeight: FontWeight.w600,
-                              fontSize: 10,
+                              fontSize: 12,
                               color: Color(0xFF044E42),
                             ),
                           ),
@@ -109,6 +105,7 @@ class AccountBalanceOverview extends StatelessWidget {
                   ],
                 ],
               ),
+
               InkWell(
                 onTap: onVisibilityToggle,
                 borderRadius: BorderRadius.circular(100),

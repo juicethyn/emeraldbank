@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountdetails_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_balance_overview.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_details_section.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_transaction_button_section.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_virtualCard.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
 
 class SavingsDetailsPage extends StatefulWidget {
@@ -68,13 +71,14 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
   Future<void> _loadReferenceData() async {
     try {
       final accountHolderName = await _fetchAccountHolderName();
-      final bankName = await _fetchBankName();
+      final bankInfo = await _fetchBankName();
       final accountInfo = await _fetchAccountTypeAndInterest();
 
       setState(() {
         _referenceData = {
           'accountHolderName': accountHolderName,
-          'bankName': bankName,
+          'bankName': bankInfo['bankName'],
+          'shortName': bankInfo['shortName'],
           'accountType': accountInfo['accountType'],
           'interestRate': accountInfo['interestRate'],
         };
@@ -125,24 +129,39 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
     }
   }
 
-  // Fetch bank name
-  Future<String> _fetchBankName() async {
+  // Fetch bank name and short name
+  Future<Map<String, dynamic>> _fetchBankName() async {
     try {
       final bankRef =
           _accountData['savingsAccountInformation']?['associatedBank'];
-      if (bankRef == null) return 'Unknown Bank';
+      if (bankRef == null) {
+        return {
+          'bankName': 'Unkown Bankname',
+          'shortName': 'Unkown Short Bankname',
+        };
+      }
 
       if (bankRef is DocumentReference) {
         final bankDoc = await bankRef.get();
         if (bankDoc.exists) {
           final bankData = bankDoc.data() as Map<String, dynamic>?;
-          return bankData?['short_name'] ?? bankData?['name'] ?? 'EmeraldBank';
+
+          return {
+            'bankName': bankData?['bank_name'] ?? 'Unknown Bankname',
+            'shortName': bankData?['short_name']?.toString() ?? '0.0',
+          };
         }
       }
-      return 'Unknown Bank';
+      return {
+        'bankName': 'Unkown Bankname',
+        'shortName': 'Unkown Short Bankname',
+      };
     } catch (e) {
       print('Error fetching bank name: $e');
-      return 'EmeraldBank';
+      return {
+        'bankName': 'Unkown Bankname',
+        'shortName': 'Unkown Short Bankname',
+      };
     }
   }
 
@@ -176,22 +195,36 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
     }
   }
 
-  double getFormattedInterestRate() {
-    final rawRate = double.tryParse(_referenceData?['interestRate'] ?? '0');
-    if (rawRate == null) return 0.0;
-
-    // Convert from decimal to percentage
-    return rawRate * 100;
-  }
-
   @override
   Widget build(BuildContext context) {
     // Extract account data fields that we already have
+    final accountHoldename =
+        _referenceData?['accountHolderName'] ?? 'Account Holder';
+    final associatedHolderFullName =
+        _referenceData?['bankName'] ?? 'Unknown Bankname';
+    final associatedHolderShortName =
+        _referenceData?['shortName'] ?? 'Unknown Short Bankname';
+    final interestRate = formatInterestRateDisplay(
+      _referenceData?['interestRate'],
+    );
+    final accountType = _referenceData?['accountType'] ?? 'Account Type';
     final accountNumber =
         _accountData['savingsAccountInformation']?['accountNumber'];
     final cardNumber = _accountData['savingsAccountInformation']?['cardNumber'];
     final expiryDate = _accountData['expiryDate'];
-    final remainingBalance = (_accountData['currentBalance'] ?? 0.0).toDouble();
+    final remainingBalance = toDouble(_accountData['currentBalance']);
+    final monthlyWithdrawals = toDouble(
+      _accountData['monthlyActivity']?['monthlyWithdrawals'],
+    );
+    final monthlyDeposit = toDouble(
+      _accountData['monthlyActivity']?['monthlyDeposit'],
+    );
+    final createdAtTimestamp =
+        _accountData['createdAt'] != null
+            ? formatDateMMDDYYYY(
+              (_accountData['createdAt'] as Timestamp).toDate(),
+            )
+            : 'N/A';
 
     return Scaffold(
       appBar: AccountDetailsAppbar(title: 'Account Details'),
@@ -220,14 +253,9 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                           child: VirtualCardWidget(
                             accountNumber: accountNumber,
                             cardNumber: cardNumber,
-                            accountHolderName:
-                                _referenceData!['accountHolderName'] ??
-                                'Account Holder',
-                            associatedHolderName:
-                                _referenceData!['bankName'] ?? 'Bank Name',
-                            accountType:
-                                _referenceData!['accountType'] ??
-                                'Account Type',
+                            accountHolderName: accountHoldename,
+                            associatedHolderName: associatedHolderShortName,
+                            accountType: accountType,
                             expiryDate: expiryDate,
                             isHidden: _isHidden,
                             onVisibilityToggle: () {
@@ -244,7 +272,7 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                         Center(
                           child: AccountBalanceOverview(
                             balance: remainingBalance,
-                            interestRate: getFormattedInterestRate(),
+                            interestRate: interestRate,
                             balanceTitle: 'Balance',
                             isHidden: _isBalanceHidden,
                             onVisibilityToggle: () {
@@ -254,6 +282,69 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                             },
                           ),
                         ),
+
+                        const SizedBox(height: 24),
+
+                        // Transaction Buttons
+                        TransactionButtonRow(
+                          buttons: [
+                            AccountTransactionButtonSection(
+                              label: 'Pay Bills',
+                              iconPath: 'lib/assets/icons/logo_small_icon.svg',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Paybills')),
+                                );
+                              },
+                            ),
+                            AccountTransactionButtonSection(
+                              label: 'Transfer',
+                              iconPath: 'lib/assets/icons/logo_small_icon.svg',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Transfer')),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Account Details
+                        AccountDetailsSection(
+                          sectionTitle: 'Details',
+                          details: {
+                            'Account Holder':
+                                _referenceData!['accountHolderName'] ??
+                                'Account Holder',
+                            'Account Number': formatAccountNumber(
+                              accountNumber,
+                            ),
+                            'Card Number': formatAccountNumber(cardNumber),
+                            'Account Type': accountType,
+                            'Interest': interestRate,
+                            'Bank': associatedHolderFullName,
+                          },
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        AccountDetailsSection(
+                          sectionTitle: 'Other Details',
+                          details: {
+                            'Total Monthly Deposit': formatCurrency(
+                              monthlyDeposit,
+                            ),
+                            'Total Monthly Withdrawals': formatCurrency(
+                              monthlyWithdrawals,
+                            ),
+                            'Account Opening Date': createdAtTimestamp,
+                          },
+                          eneableToggle: false,
+                        ),
+
+                        const SizedBox(height: 50),
                       ],
                     ),
                   ),

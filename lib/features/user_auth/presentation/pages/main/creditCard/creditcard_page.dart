@@ -3,6 +3,7 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountspage_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_card_accountspages.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -136,8 +137,8 @@ class _CreditcardPageState extends State<CreditcardPage> {
         }
 
         // Extracting remaining essential details
-        final remainingCredit = (cardData['remainingCredit'] ?? 0).toDouble();
-        final creditLimit = (cardData['creditLimit'] ?? 0).toDouble();
+        final remainingCredit = toDouble(cardData['remainingCredit']);
+        final creditLimit = toDouble(cardData['creditLimit']);
         final billingDueDate =
             cardData['currentBilling']?['billingDueDate'] ?? 'N/A';
 
@@ -146,7 +147,7 @@ class _CreditcardPageState extends State<CreditcardPage> {
           'limit': creditLimit,
           'accountType': cardTypeName,
           'secondDetail': 'Billing Due: $billingDueDate',
-          'thirdDetail': 'Balance ₱ ${remainingCredit.toStringAsFixed(2)}',
+          'thirdDetail': 'Balance ₱ ${formatCurrency(remainingCredit)}',
           'bankName': bankName,
           'docId': creditCardDoc.id,
         });

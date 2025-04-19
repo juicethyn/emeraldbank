@@ -1,7 +1,8 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/text_style.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_svg/svg.dart';
 
 class AccountCard extends StatelessWidget {
   final double balanceHolder;
@@ -13,6 +14,8 @@ class AccountCard extends StatelessWidget {
   final bool isHidden;
   final String? logoAsset;
   final bool? isAccountNumber;
+  final bool? hasInterestRate;
+  final String? interestRate;
   final VoidCallback onTap;
 
   const AccountCard({
@@ -27,26 +30,9 @@ class AccountCard extends StatelessWidget {
     this.logoAsset,
     required this.onTap,
     this.isAccountNumber,
+    this.hasInterestRate,
+    this.interestRate,
   });
-
-  String _formatCurrency(double value) {
-    final NumberFormat numberFormat = NumberFormat('#,##0.00', 'en_US');
-    return '₱ ${numberFormat.format(value)}';
-  }
-
-  String _maskAccountNumber(String accountNumber) {
-    final digitsOnly = accountNumber.replaceAll(RegExp(r'[^\d]'), '');
-
-    if (digitsOnly.length <= 4) {
-      return '**** ${digitsOnly.substring(0, digitsOnly.length)}';
-    }
-
-    final lastFour = digitsOnly.substring(digitsOnly.length - 4);
-
-    final maskedPart = '*' * (digitsOnly.length - 4);
-
-    return '$maskedPart $lastFour';
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +94,7 @@ class AccountCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      isHidden ? '₱ ××××.××' : _formatCurrency(balanceHolder),
+                      isHidden ? '₱ ××××.××' : formatCurrency(balanceHolder),
                       style: AccountCardStyles.balanceHolderLabel,
                     ),
                     if (limitBalanceHolder != null) ...[
@@ -118,11 +104,49 @@ class AccountCard extends StatelessWidget {
                         child: Text(
                           isHidden
                               ? '/ ₱ ××××.××'
-                              : '/ ${_formatCurrency(limitBalanceHolder!)}',
+                              : '/ ${formatCurrency(limitBalanceHolder!)}',
                           style: AccountCardStyles.balanceHolderLabel,
                         ),
                       ),
                     ],
+
+                    SizedBox(width: 4),
+
+                    (hasInterestRate ?? false)
+                        ? Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FFE5),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              SvgPicture.asset(
+                                'lib/assets/icons/chart_line.svg',
+                                width: 12,
+                                height: 12,
+                                colorFilter: ColorFilter.mode(
+                                  Color(0xFF044E42),
+                                  BlendMode.srcIn,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                interestRate!,
+                                style: TextStyle(
+                                  fontFamily: 'Montserrat',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                  color: Color(0xFF044E42),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : SizedBox(),
                   ],
                 ),
               ),
@@ -144,7 +168,7 @@ class AccountCard extends StatelessWidget {
                     opacity: 0.6,
                     child: Text(
                       (isAccountNumber == true && isHidden)
-                          ? _maskAccountNumber(secondDetail)
+                          ? hideAccountNumber(secondDetail)
                           : secondDetail,
                       style: AccountCardStyles.accountDetails,
                     ),

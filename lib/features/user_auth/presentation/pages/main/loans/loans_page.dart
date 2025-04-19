@@ -3,6 +3,7 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountsPage_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_card_accountspages.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -129,12 +130,11 @@ class _LoansPageState extends State<LoansPage> {
         }
 
         // Extract remaining essential details
-        final loanBalance = (cardData['loanBalance'] ?? 0).toDouble();
-        final totalLoan = (cardData['totalLoan'] ?? 0).toDouble();
+        final loanBalance = toDouble(cardData['loanBalance']);
+        final totalLoan = toDouble(cardData['totalLoan']);
         final billingDueDate =
             cardData['currentBilling']?['billingDueDate'] ?? 'N/A';
-        final billingDue =
-            (cardData['currentBilling']?['billingDue'] ?? 0).toDouble();
+        final billingDue = toDouble(cardData['currentBilling']?['billingDue']);
         final combinedBillingDueAndBillingType =
             '₱ ${billingDue.toStringAsFixed(2)} / $billingType';
 
