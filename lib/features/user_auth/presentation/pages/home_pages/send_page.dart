@@ -6,9 +6,7 @@ class SendPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Send Money"),
-      ),
+      appBar: AppBar(title: Text("Send Money")),
       body: Text("This is the SendPage"),
     );
   }

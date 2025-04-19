@@ -16,15 +16,16 @@ class OwnAccountPageState extends State<OwnAccountPage> {
   final purposeController = TextEditingController();
 
   // ✅ Custom input formatter allowing up to 2 decimal places only
-  final amountInputFormatter = TextInputFormatter.withFunction(
-    (oldValue, newValue) {
-      final text = newValue.text;
-      if (RegExp(r'^\d*\.?\d{0,2}$').hasMatch(text)) {
-        return newValue;
-      }
-      return oldValue;
-    },
-  );
+  final amountInputFormatter = TextInputFormatter.withFunction((
+    oldValue,
+    newValue,
+  ) {
+    final text = newValue.text;
+    if (RegExp(r'^\d*\.?\d{0,2}$').hasMatch(text)) {
+      return newValue;
+    }
+    return oldValue;
+  });
 
   void clearFields() {
     setState(() {
@@ -102,7 +103,9 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                     controller: amountController,
                     label: "Amount",
                     hintText: "₱0.00",
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     inputFormatters: [amountInputFormatter],
                   ),
                   const SizedBox(height: 8),
@@ -113,7 +116,7 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                         text: 'You have a current balance of ',
                         children: [
                           TextSpan(
-                            text: '₱53,501',
+                            text: '₱10,000.00',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Color.fromARGB(255, 0, 95, 71),
@@ -158,25 +161,53 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                           ),
                         ),
                         onPressed: () {
-                          if (sendFrom == null || sendTo == null || amountController.text.isEmpty) {
+                          if (sendFrom == null ||
+                              sendTo == null ||
+                              amountController.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Please fill in all required fields.'),
+                                content: Text(
+                                  'Please fill in all required fields.',
+                                ),
                                 backgroundColor: Colors.red,
                               ),
                             );
                             return;
                           }
 
+                          // Parse the entered amount
+                          double enteredAmount =
+                              double.tryParse(amountController.text) ?? 0.0;
+
+                          // Define the user's current balance (replace this with the actual balance from your backend or state)
+                          double currentBalance =
+                              10000.0; // Example balance fetched from Firestore
+
+                          // Check if the entered amount exceeds the current balance
+                          if (enteredAmount > currentBalance) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Insufficient balance. Please enter a valid amount.',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Proceed to the ConfirmationPage if the balance is sufficient
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ConfirmationPage(
-                                amount: double.parse(amountController.text), // Pass the entered amount
-                                purpose: purposeController.text,
-                                fromAccount: sendFrom!,
-                                toAccount: sendTo!,
-                              ),
+                              builder:
+                                  (context) => ConfirmationPage(
+                                    amount:
+                                        enteredAmount, // Pass the entered amount
+                                    purpose: purposeController.text,
+                                    fromAccount: sendFrom!,
+                                    toAccount: sendTo!,
+                                  ),
                             ),
                           );
                         },
@@ -219,104 +250,125 @@ class OwnAccountPageState extends State<OwnAccountPage> {
               ),
             ],
           ),
-          child: value == null
-              ? DropdownButtonFormField<String>(
-                  value: value,
-                  decoration: const InputDecoration(
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    border: InputBorder.none,
-                    hintText: "Select an existing account",
-                  ),
-                  isExpanded: true,
-                  icon: const Icon(
-                    Icons.arrow_drop_down_circle_outlined,
-                    color: Colors.teal,
-                  ),
-                  items: items.map((item) {
-                    return DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(item),
-                    );
-                  }).toList(),
-                  onChanged: onChanged,
-                )
-              : Container(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF00C191), Color(0xFF00E0A8)],
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
+          child:
+              value == null
+                  ? DropdownButtonFormField<String>(
+                    value: value,
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      border: InputBorder.none,
+                      hintText: "Select an existing account",
                     ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      ...items.map((item) {
-                        return GestureDetector(
-                          onTap: () => onChanged(item),
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.9),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Emerald Bank Savings',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
+                    isExpanded: true,
+                    icon: const Icon(
+                      Icons.arrow_drop_down_circle_outlined,
+                      color: Colors.teal,
+                    ),
+                    items:
+                        items.map((item) {
+                          return DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(item),
+                          );
+                        }).toList(),
+                    onChanged: onChanged,
+                  )
+                  : Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00C191), Color(0xFF00E0A8)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        ...items.map((item) {
+                          return GestureDetector(
+                            onTap: () => onChanged(item),
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Emerald Bank Savings',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          '4363 **** **** ****',
+                                          style: TextStyle(
+                                            color: Colors.black.withOpacity(
+                                              0.6,
+                                            ),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: const [
+                                      Text(
+                                        'Available Balance',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.black54,
+                                        ),
                                       ),
                                       Text(
-                                        '4363 **** **** ****',
+                                        '₱10,000.00',
                                         style: TextStyle(
-                                          color: Colors.black.withOpacity(0.6),
-                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: const [
-                                    Text(
-                                      'Available Balance',
-                                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                                  const SizedBox(width: 8),
+                                  if (item == value)
+                                    Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.green,
+                                      ),
+                                      child: const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
                                     ),
-                                    Text(
-                                      '₱53,501.25',
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(width: 8),
-                                if (item == value)
-                                  Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.green,
-                                    ),
-                                    child: const Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 16,
-                                    ),
-                                  ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ],
+                          );
+                        }).toList(),
+                      ],
+                    ),
                   ),
-                ),
         ),
       ],
     );
@@ -356,7 +408,10 @@ class OwnAccountPageState extends State<OwnAccountPage> {
             inputFormatters: inputFormatters,
             decoration: InputDecoration(
               hintText: hintText,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
               border: InputBorder.none,
               counterText: '',
             ),

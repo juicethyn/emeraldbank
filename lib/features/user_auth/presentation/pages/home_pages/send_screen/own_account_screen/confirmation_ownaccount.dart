@@ -77,7 +77,7 @@ class ConfirmationPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Your new balance will be ₱${(53501.25 - amount).toStringAsFixed(2)}',
+              'Your new balance will be ₱${(10000.00 - amount).toStringAsFixed(2)}',
               style: const TextStyle(fontSize: 16, color: Colors.black87),
             ),
             const SizedBox(height: 30),
