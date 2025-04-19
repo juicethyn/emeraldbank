@@ -1,7 +1,7 @@
 class UserModel {
   final String email;
   final String phoneNumber;
-  final double balance;
+  double balance;
   final String accountNickName;
   final String accountName;
   final String accountNumber;

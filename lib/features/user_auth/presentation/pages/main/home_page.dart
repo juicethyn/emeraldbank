@@ -1,6 +1,8 @@
 
 
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
 import 'package:emeraldbank_mobileapp/global/common/shortcuts_data.dart';
@@ -417,13 +419,26 @@ class _HomePageState extends State<HomePage> {
                   children: List.generate(visibleShortcuts.length, (index) {
                     String imagePath = visibleShortcuts[index]['image']!;
                     String text = visibleShortcuts[index]['text']!;
-                    final onTapCallback = visibleShortcuts[index]['onTap']
-                    as void Function(BuildContext);
+                    String key = visibleShortcuts[index]['key']!;
 
                     return ShortcutButton(
                       imagePath: imagePath, 
                       text: text, 
-                      onTapCallback: onTapCallback);
+                      onTapCallback: (context) {
+                      switch (key) {
+                        case 'send':
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => SendPage(user: widget.user)));
+                          break;
+                        case 'bills':
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage()));
+                          break;
+                        // add more actions here...
+                        default:
+                          // maybe show a snackbar or log?
+                          print('Unknown shortcut key: $key');
+                      }
+                              }   
+                      );
                   }),
                 ),
               ),
