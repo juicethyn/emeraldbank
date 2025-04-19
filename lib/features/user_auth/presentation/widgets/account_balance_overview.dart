@@ -85,7 +85,7 @@ class AccountBalanceOverview extends StatelessWidget {
                       child: Row(
                         children: [
                           SvgPicture.asset(
-                            'lib/assets/icon/chart_line.svg',
+                            'lib/assets/icons/chart_line.svg',
                             width: 12,
                             height: 12,
                             colorFilter: ColorFilter.mode(

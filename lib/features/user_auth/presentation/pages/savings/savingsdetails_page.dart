@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountdetails_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_balance_overview.dart';
@@ -20,39 +22,47 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
   Map<String, dynamic> _accountData = {};
   Map<String, String>? _referenceData;
   bool _isReferencesLoading = true;
+  StreamSubscription<DocumentSnapshot>? _accountSubscription;
 
   @override
   void initState() {
     super.initState();
-    _fetchAccountData();
+    _setupFirestoreListener();
   }
 
-  Future<void> _fetchAccountData() async {
-    try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('savings')
-              .doc(widget.savingsId)
-              .get();
+  void _setupFirestoreListener() {
+    _accountSubscription = FirebaseFirestore.instance
+        .collection('savings')
+        .doc(widget.savingsId)
+        .snapshots()
+        .listen(
+          (docSnapshot) {
+            if (docSnapshot.exists) {
+              setState(() {
+                _accountData = docSnapshot.data() ?? {};
+                _isLoading = false;
+              });
 
-      if (doc.exists) {
-        setState(() {
-          _accountData = doc.data() ?? {};
-          _isLoading = false;
-        });
+              _loadReferenceData();
+            } else {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          },
+          onError: (e) {
+            print('Error listening to account changes: $e');
+            setState(() {
+              _isLoading = false;
+            });
+          },
+        );
+  }
 
-        _loadReferenceData();
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error fetching account data: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  @override
+  void dispose() {
+    _accountSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadReferenceData() async {
@@ -186,58 +196,66 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
     return Scaffold(
       appBar: AccountDetailsAppbar(title: 'Account Details'),
       body:
-          _isLoading
+          _isLoading || _isReferencesLoading
               ? const Center(
                 child: CircularProgressIndicator(color: Color(0xFF06D6A0)),
               )
-              : _isReferencesLoading
-              ? const Center(
-                child: CircularProgressIndicator(color: Color(0xFF06D6A0)),
-              )
-              : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: VirtualCardWidget(
-                          accountNumber: accountNumber,
-                          cardNumber: cardNumber,
-                          accountHolderName:
-                              _referenceData!['accountHolderName'] ??
-                              'Account Holder',
-                          associatedHolderName:
-                              _referenceData!['bankName'] ?? 'Bank Name',
-                          accountType:
-                              _referenceData!['accountType'] ?? 'Account Type',
-                          expiryDate: expiryDate,
-                          isHidden: _isHidden,
-                          onVisibilityToggle: () {
-                            setState(() {
-                              _isHidden = !_isHidden;
-                            });
-                          },
+              : RefreshIndicator(
+                color: const Color(0xFF06D6A0),
+                onRefresh: () async {
+                  setState(() {
+                    _isReferencesLoading = true;
+                  });
+                  await _loadReferenceData();
+                  return Future.value();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: VirtualCardWidget(
+                            accountNumber: accountNumber,
+                            cardNumber: cardNumber,
+                            accountHolderName:
+                                _referenceData!['accountHolderName'] ??
+                                'Account Holder',
+                            associatedHolderName:
+                                _referenceData!['bankName'] ?? 'Bank Name',
+                            accountType:
+                                _referenceData!['accountType'] ??
+                                'Account Type',
+                            expiryDate: expiryDate,
+                            isHidden: _isHidden,
+                            onVisibilityToggle: () {
+                              setState(() {
+                                _isHidden = !_isHidden;
+                              });
+                            },
+                          ),
                         ),
-                      ),
 
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                      // Account Balance Overview
-                      Center(
-                        child: AccountBalanceOverview(
-                          balance: remainingBalance,
-                          interestRate: getFormattedInterestRate(),
-                          balanceTitle: 'Balance',
-                          isHidden: _isBalanceHidden,
-                          onVisibilityToggle: () {
-                            setState(() {
-                              _isBalanceHidden = !_isBalanceHidden;
-                            });
-                          },
+                        // Account Balance Overview
+                        Center(
+                          child: AccountBalanceOverview(
+                            balance: remainingBalance,
+                            interestRate: getFormattedInterestRate(),
+                            balanceTitle: 'Balance',
+                            isHidden: _isBalanceHidden,
+                            onVisibilityToggle: () {
+                              setState(() {
+                                _isBalanceHidden = !_isBalanceHidden;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
