@@ -1,8 +1,10 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer_own_account..dart';
+import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class SendTransferScreen extends StatelessWidget {
-  const SendTransferScreen({super.key});
+  final UserModel? user;
+  const SendTransferScreen({Key? key, this.user}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

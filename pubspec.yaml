@@ -41,6 +41,7 @@ dependencies:
   fluttertoast: ^8.2.12
   flutter_svg: ^2.0.17
   intl: ^0.20.2 # Formatting Numbers and Dates
+  shared_preferences: ^2.2.2
 
 
 
@@ -82,12 +83,23 @@ flutter:
     - lib/assets/shortcuts_icon/insurance.png
     - lib/assets/shortcuts_icon/support.png
     - lib/assets/shortcuts_icon/more.png
+    - lib/assets/shortcuts_icon/crypto.png
+    - lib/assets/shortcuts_icon/funds.png
+    - lib/assets/shortcuts_icon/stocks.png
 
     #Pictures Folder
     - lib/assets/pictures/profilepicture.png
     - lib/assets/pictures/background_logo.png
     - lib/assets/pictures/emerald_logo_white.png
     - lib/assets/pictures/chip.png
+    - lib/assets/pictures/investment_logo.png
+    - lib/assets/pictures/charts.png
+    - lib/assets/pictures/funds_oval.png
+    - lib/assets/pictures/stocks_oval.png
+    - lib/assets/pictures/crypto_oval.png
+    - lib/assets/pictures/insurance_oval.png
+    - lib/assets/pictures/emerald_green_logo.png
+    - lib/assets/pictures/card.png
 
 
 

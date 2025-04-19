@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class ShortcutButton extends StatelessWidget {
+class ShortcutButtonDark extends StatelessWidget {
   final String imagePath;
   final String text;
   final void Function(BuildContext context) onTapCallback;
 
-  const ShortcutButton({
+  const ShortcutButtonDark({
     super.key,
     required this.imagePath,
     required this.text,
@@ -21,7 +21,7 @@ class ShortcutButton extends StatelessWidget {
         width: 88,
         height: 80,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFF191919),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -43,7 +43,7 @@ class ShortcutButton extends StatelessWidget {
               text,
               style: const TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],

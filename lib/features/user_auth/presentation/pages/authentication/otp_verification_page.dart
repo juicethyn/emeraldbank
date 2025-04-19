@@ -8,10 +8,10 @@ class OtpVerificationPage extends StatefulWidget {
   final bool isSignUp;
   final String? accountNickName;
   final String? accountName;
-  final String? accountNumber;
-  final String? birthDate;
+  final String? accountNumber; // Should be Int
+  final String? birthDate; 
   final String? email;
-  final String? phone;
+  final String? phone; // Int
   final String? password;
   // final PhoneAuthCredential? credential; // Optional for instant verification
 

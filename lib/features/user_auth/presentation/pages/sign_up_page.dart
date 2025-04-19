@@ -3,6 +3,10 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/da
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/form_container_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
+
+// Things needs to be done here:
+// 1. Crosschecking if email is already registered, thus it will make an error. - Nyht
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -38,7 +42,7 @@ class _SignUpPageState extends State<SignUpPage> {
   Future<void> _selectDate(BuildContext context) async {
     DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: DateTime(2000), // default date
+      initialDate: DateTime(2003), // default date
       firstDate: DateTime(1900), // earliest DOB
       lastDate: DateTime.now(),  // today is the latest allowed
     );
@@ -66,7 +70,7 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -91,13 +95,18 @@ class _SignUpPageState extends State<SignUpPage> {
                     style: TextStyle(
                       color: Color(0xFF1A1819), 
                       fontSize: 12, 
-                      fontWeight: FontWeight.w700),
+                      fontWeight: FontWeight.w700,),
+                    
                   ),
                 ],
               ),
               FormContainerWidget(
                 controller: _nickNameController,
-                hintText: "ex. Juan",),
+                hintText: "ex. Juan",
+                inputType: TextInputType.text,
+                inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z]')), // Only letters and spaces
+                    ],),
               SizedBox(height: 12),
               Row(
                 children: [
@@ -112,7 +121,11 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               FormContainerWidget(
                 controller: _accountNameController,
-                hintText: "ex. Juan Dela Cruz",),
+                hintText: "ex. Juan Dela Cruz",
+                inputType: TextInputType.text,
+                inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')), // Only letters and spaces
+                    ],),
               SizedBox(height: 12),
               Row(
                 children: [
@@ -127,7 +140,12 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               FormContainerWidget(
                 controller: _accountNumberController,
-                hintText: "ex. 1234456778904209 (12 digits)",),
+                hintText: "ex. 1234456778904209 (16 digits)",
+                inputType: TextInputType.number,
+                inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(16)],
+                ),
               SizedBox(height: 12),
               Row(
                 children: [
@@ -175,90 +193,90 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               FormContainerWidget(
                 controller: _phoneController,
-                hintText: "+11234567890",),
-              SizedBox(height: 12),
-              
-          ],
-        ),
-        ),
-        bottomNavigationBar:               
-          GestureDetector(
-                  onTap: () async {
-                  final String accountNickName = _nickNameController.text.trim();
-                  final String accountName = _accountNameController.text.trim();
-                  final String accountNumber = _accountNumberController.text.trim();
-                  final String birthDate = _birthDateController.text.trim();
-                  final String email = _emailController.text.trim();
-                  final String phone = _phoneController.text.trim();
-
-                  if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please complete all fields.")),
-                    );
-                    return;
-                  }
-
-                  setState(() => isSigningUp = true);
-
-                  try {
-                    final querySnapshot = await FirebaseFirestore.instance
-                        .collection('debitCardDatabase')
-                        .where('accountNumber', isEqualTo: accountNumber)
-                        .where('accountName', isEqualTo: accountName)
-                        .where('email', isEqualTo: email)
-                        .where('birthDate', isEqualTo: birthDate)
-                        .get();
-
-                    if (querySnapshot.docs.isNotEmpty) {
-                      // ✅ Details matched, proceed to SignUpPage2
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SignUpPage2(
-                            accountNickName: accountNickName,
-                            accountNumber: accountNumber,
-                            accountName: accountName,
-                            birthDate: birthDate,
-                            email: email,
-                            phone: phone,
-                          ),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Invalid Account. Please check your details.")),
-                      );
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Error verifying account: $e")),
-                    );
-                  } finally {
-                    setState(() => isSigningUp = false);
-                  }
-                },
-                // onTap: _signUp,
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    bottom: 36,
-                    left: 16,
-                    right: 16),
-                  child: Container(
-                    width: double.infinity,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: Color(0xFF06D6A0),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: isSigningUp
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text("Next", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
+                hintText: "ex. 091234567890",
+                inputType: TextInputType.number,
+                inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(11)],
                 ),
+              SizedBox(height: 128),
+
+              GestureDetector(
+                        onTap: () async {
+                        final String accountNickName = _nickNameController.text.trim();
+                        final String accountName = _accountNameController.text.trim();
+                        final String accountNumber = _accountNumberController.text.trim();
+                        final String birthDate = _birthDateController.text.trim();
+                        final String email = _emailController.text.trim();
+                        final String phone = "+1${_phoneController.text.trim().replaceFirst('0', '')}";
+
+                        if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Please complete all fields.")),
+                          );
+                          return;
+                        }
+
+                        setState(() => isSigningUp = true);
+
+                        try {
+                          final querySnapshot = await FirebaseFirestore.instance
+                              .collection('debitCardDatabase')
+                              .where('accountNumber', isEqualTo: accountNumber)
+                              .where('accountName', isEqualTo: accountName)
+                              .where('email', isEqualTo: email)
+                              .where('birthDate', isEqualTo: birthDate)
+                              .get();
+
+                          if (querySnapshot.docs.isNotEmpty) {
+                            // ✅ Details matched, proceed to SignUpPage2
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SignUpPage2(
+                                  accountNickName: accountNickName,
+                                  accountNumber: accountNumber,
+                                  accountName: accountName,
+                                  birthDate: birthDate,
+                                  email: email,
+                                  phone: phone,
+                                ),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Invalid Account. Please check your details.")),
+                            );
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Error verifying account: $e")),
+                          );
+                        } finally {
+                          setState(() => isSigningUp = false);
+                        }
+                      },
+                      // onTap: _signUp,
+                      child: Container(
+                        width: double.infinity,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF06D6A0),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Center(
+                          child: isSigningUp
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text("Next", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+              ),
+
+
+          ],
+          
         ),
-    
+        ),
     );
   }
 

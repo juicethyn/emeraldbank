@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class FormContainerWidget extends StatefulWidget {
   final TextEditingController? controller;
@@ -11,6 +12,7 @@ class FormContainerWidget extends StatefulWidget {
   final FormFieldValidator<String>? validator;
   final ValueChanged<String>? onFieldSubmitted;
   final TextInputType? inputType;
+  final List<TextInputFormatter>? inputFormatters; // ➕ new
 
   const FormContainerWidget({
     super.key,
@@ -24,6 +26,7 @@ class FormContainerWidget extends StatefulWidget {
     this.validator,
     this.onFieldSubmitted,
     this.inputType,
+    this.inputFormatters, // ➕ new
   });
 
   @override
@@ -45,6 +48,7 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
         ),
         controller: widget.controller,
         keyboardType: widget.inputType,
+        inputFormatters: widget.inputFormatters, // ➕ apply formatters
         key: widget.fieldKey,
         obscureText: widget.isPasswordField == true ? _obscureText : false,
         onSaved: widget.onSaved,
@@ -52,40 +56,29 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
         onFieldSubmitted: widget.onFieldSubmitted,
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Color(0xFF06D6A0),
-              width: 1.8,
-            ),
-            borderRadius: BorderRadius.circular(12)
+            borderSide: BorderSide(color: Color(0xFF06D6A0), width: 1.8),
+            borderRadius: BorderRadius.circular(12),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Color(0xFF06D6A0),
-              width: 1.8,
-            ),
-            borderRadius: BorderRadius.circular(12)
+            borderSide: BorderSide(color: Color(0xFF06D6A0), width: 1.8),
+            borderRadius: BorderRadius.circular(12),
           ),
           border: InputBorder.none,
           fillColor: Colors.white54,
           filled: true,
           hintText: widget.hintText,
           hintStyle: TextStyle(color: Colors.black45),
-          suffixIcon: GestureDetector(
-            onTap: () {
-              setState(() {
-                _obscureText = !_obscureText;
-              });
-            },
-            child:
-                widget.isPasswordField == true
-                    ? Icon(
+          suffixIcon:
+              widget.isPasswordField == true
+                  ? GestureDetector(
+                    onTap: () => setState(() => _obscureText = !_obscureText),
+                    child: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: _obscureText == false ? Colors.blue : Colors.grey,
-                    )
-                    : Text(""),
-          ),
+                      color: _obscureText ? Colors.grey : Colors.blue,
+                    ),
+                  )
+                  : null,
         ),
-        
       ),
     );
   }

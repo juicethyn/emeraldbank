@@ -1,57 +1,73 @@
 
 
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
+import 'package:emeraldbank_mobileapp/global/common/shortcuts_data.dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
+import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 class HomePage extends StatefulWidget {
   final UserModel? user;
-
+  final bool isBalanceHidden;
+  final VoidCallback onToggleBalanceVisibility;
+  final bool isCardHidden;
+  final VoidCallback onToggleCardVisibility;
   // Pass `key` directly to the super constructor
-  HomePage({Key? key, this.user}) : super(key: key);
+  HomePage({
+  Key? key, 
+  this.user,
+  required this.isBalanceHidden,
+  required this.onToggleBalanceVisibility,
+  required this.isCardHidden,
+  required this.onToggleCardVisibility,
+  }) : super(key: key);
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Map<String, dynamic>> items = [
-    {
-      'image': 'lib/assets/shortcuts_icon/send.png',
-      'text': 'Send',
-      'onTap': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SendTransferScreen()),
-        );
-      },
-    },
-    {
-      'image': 'lib/assets/shortcuts_icon/bills.png',
-      'text': 'Bills',
-      'onTap': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => BillsPage()),
-        );
-      },
-    },
-    {
-      'image': 'lib/assets/shortcuts_icon/more.png',
-      'text': 'More',
-      'onTap': (BuildContext context) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => SendPage()),
-        );
-      },
-    },
-  ];
+  List<String> selectedKeys = []; // This will hold the selected shortcut keys
+  late List<Map<String, dynamic>> visibleShortcuts;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize visibleShortcuts based on selectedKeys
+    selectedKeys = ['send','bills','games','more'];
+
+    visibleShortcuts = allShortcuts
+        .where((item) => selectedKeys.contains(item['key']))
+        .toList();
+  }
+
+  // Callback to update selectedKeys when customization is made
+  void updateSelectedKeys(List<String> updatedKeys) {
+    setState(() {
+      selectedKeys = updatedKeys;
+      visibleShortcuts = allShortcuts
+          .where((item) => selectedKeys.contains(item['key']))
+          .toList();
+    });
+  }
+
+  String formatAccountNumber(String accountNumber) {
+    final cleaned = accountNumber.replaceAll(RegExp(r'\D'), ''); // Remove non-digits
+    final buffer = StringBuffer();
+    for (int i = 0; i < cleaned.length; i++) {
+      buffer.write(cleaned[i]);
+      if ((i + 1) % 4 == 0 && i + 1 != cleaned.length) {
+        buffer.write(' ');
+      }
+    }
+    return buffer.toString();
+  }
+
 
  // naka const??
   @override
@@ -82,17 +98,19 @@ class _HomePageState extends State<HomePage> {
                         HomeTextButtonWidget(
                           buttonText: "Credits", 
                           onPressed: () { 
-                            print("This is the credit button");
+                            showSnackbarMessage(context, "Credits under Development");
                           },
                           horizontalPadding: 35,
+                          backgroundColor: Color.fromARGB(255, 237, 237, 237),
                           ),
                         SizedBox(width: 12),
                         HomeTextButtonWidget(
                           buttonText: "Loan", 
                           onPressed: () { 
-                            print("This is the loan button");
+                            showSnackbarMessage(context, "Loan is under Development");
                           },
                           horizontalPadding: 40,
+                          backgroundColor: Color.fromARGB(255, 237, 237, 237),
                           ),
                       ],
                     ),
@@ -143,7 +161,7 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               Text(
-                                "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
+                                widget.isBalanceHidden? "₱••••••" : "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
@@ -157,12 +175,12 @@ class _HomePageState extends State<HomePage> {
                             top: 2,  // Adjust the top position as needed  // Adjust the right position as needed
                             child: IconButton(
                               icon: Icon(
-                                Icons.visibility, // Eye icon
+                                widget.isBalanceHidden? Icons.visibility_off : Icons.visibility, // Eye icon
                                 size: 16, // You can adjust the size of the icon
                                 color: Colors.white, // Icon color (same as text color or any color you want)
                               ),
                               onPressed: () {
-                                print("Eye icon clicked");
+                                widget.onToggleBalanceVisibility();
                               },
                             ),
                           ),
@@ -247,21 +265,24 @@ class _HomePageState extends State<HomePage> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("${user?.accountNumber}",
+                                  Text(
+                                  widget.isCardHidden ? "•••• •••• •••• ${user?.accountNumber.substring(user.accountNumber.length - 4)}" 
+                                  : user?.accountNumber != null ? formatAccountNumber(user!.accountNumber) : '',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 24,
+                                    fontSize: 21,
                                     fontWeight: FontWeight.w600,
+                                    letterSpacing: 2,
                                   ),
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      Icons.visibility_off, // Eye icon
+                                      widget.isCardHidden? Icons.visibility_off : Icons.visibility, // Eye icon
                                       size: 24, // You can adjust the size of the icon
                                       color: Colors.white, // Icon color (same as text color or any color you want)
                                     ),
                                     onPressed: () {
-                                      print("Eye icon clicked");
+                                      widget.onToggleCardVisibility();
                                     },
                                   ),
                                 ],
@@ -280,7 +301,8 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     ),
                                     SizedBox(width: 4),
-                                    Text("${user?.issuedOn}",
+                                    Text(
+                                    widget.isCardHidden ? "••/••/••••" : "${user?.issuedOn}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.normal,
@@ -298,7 +320,8 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                     ),
                                     SizedBox(width: 4),
-                                    Text("${user?.expiresEnd}",
+                                    Text(
+                                    widget.isCardHidden ? "••/••/••••" : "${user?.expiresEnd}",
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.normal,
@@ -309,9 +332,7 @@ class _HomePageState extends State<HomePage> {
                                 )
                               ],
                             ),
-
                             SizedBox(height: 4),
-
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -324,7 +345,8 @@ class _HomePageState extends State<HomePage> {
                                         fontWeight: FontWeight.w300,
                                         color: Colors.white
                                       ),),
-                                    Text("${user?.accountName}",
+                                    Text(
+                                    widget.isCardHidden ? "••••••••••••••••••••" :"${user?.accountName}",
                                     style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w400,
@@ -347,7 +369,6 @@ class _HomePageState extends State<HomePage> {
                   ), // Credit Card Details
                 ],
               ),
-              
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -359,9 +380,24 @@ class _HomePageState extends State<HomePage> {
                   Align(
                     alignment: Alignment.bottomRight,
                     child: TextButton(
-                      onPressed: () {
-                        print("This is the customize button");
-                      },
+                      onPressed:
+                        () async {
+                      final updatedShortcuts = await Navigator.push(context, MaterialPageRoute(builder: (context) => 
+                      CustomizePage(
+                        selectedShortcuts: visibleShortcuts,
+                        allShortcuts: allShortcuts,
+                      )
+                      )
+                      );
+                      if (updatedShortcuts != null) {
+                        setState(() {
+                          selectedKeys = List<String>.from(updatedShortcuts); // safely cast to List<String>
+                          visibleShortcuts = allShortcuts
+                              .where((item) => selectedKeys.contains(item['key']))
+                              .toList();
+                        });
+                      }
+                    },
                       child: Text("Customize",
                       style: TextStyle(
                         fontSize: 10,
@@ -380,15 +416,29 @@ class _HomePageState extends State<HomePage> {
                   spacing: 8,
                   runSpacing: 8,
                   alignment: WrapAlignment.start,
-                  children: List.generate(items.length, (index) {
-                    String imagePath = items[index]['image']!;
-                    String text = items[index]['text']!;
-                    final onTapCallback = items[index]['onTap'] as void Function(BuildContext);
+                  children: List.generate(visibleShortcuts.length, (index) {
+                    String imagePath = visibleShortcuts[index]['image']!;
+                    String text = visibleShortcuts[index]['text']!;
+                    String key = visibleShortcuts[index]['key']!;
 
                     return ShortcutButton(
                       imagePath: imagePath, 
                       text: text, 
-                      onTapCallback: onTapCallback);
+                      onTapCallback: (context) {
+                      switch (key) {
+                        case 'send':
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => SendTransferScreen(user: widget.user)));
+                          break;
+                        case 'bills':
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage()));
+                          break;
+                        // add more actions here...
+                        default:
+                          // maybe show a snackbar or log?
+                          print('Unknown shortcut key: $key');
+                      }
+                              }   
+                      );
                   }),
                 ),
               ),
