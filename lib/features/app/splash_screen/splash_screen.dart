@@ -23,14 +23,36 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Text(
-          "EmeraldBank", 
-          style: TextStyle(
-            color: Colors.blue, 
-            fontWeight: FontWeight.bold),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF06D6A0), Color(0xFF2CFFC8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+              'lib/assets/pictures/emerald_logo_white.png',
+              width: 80,
+              height: 110,
+              // colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+              ),
+              Text("EmeraldBank",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white
+              ),)
+            ],
           ),
-        )
+        ),
+      )
     );
   }
 }

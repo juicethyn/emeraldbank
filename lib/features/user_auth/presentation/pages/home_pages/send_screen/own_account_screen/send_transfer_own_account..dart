@@ -1,4 +1,6 @@
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/confirmation_ownaccount.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class OwnAccountPage extends StatefulWidget {
   const OwnAccountPage({super.key});
@@ -12,6 +14,17 @@ class OwnAccountPageState extends State<OwnAccountPage> {
   String? sendTo;
   final amountController = TextEditingController();
   final purposeController = TextEditingController();
+
+  // ✅ Custom input formatter allowing up to 2 decimal places only
+  final amountInputFormatter = TextInputFormatter.withFunction(
+    (oldValue, newValue) {
+      final text = newValue.text;
+      if (RegExp(r'^\d*\.?\d{0,2}$').hasMatch(text)) {
+        return newValue;
+      }
+      return oldValue;
+    },
+  );
 
   void clearFields() {
     setState(() {
@@ -32,7 +45,7 @@ class OwnAccountPageState extends State<OwnAccountPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.pop(context); // This will fix your navigation issue
+            Navigator.pop(context);
           },
         ),
         centerTitle: true,
@@ -89,7 +102,8 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                     controller: amountController,
                     label: "Amount",
                     hintText: "₱0.00",
-                    keyboardType: TextInputType.number,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: [amountInputFormatter],
                   ),
                   const SizedBox(height: 8),
                   const Align(
@@ -100,7 +114,10 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                         children: [
                           TextSpan(
                             text: '₱53,501',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 0, 95, 71),
+                            ),
                           ),
                         ],
                       ),
@@ -113,6 +130,7 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                     hintText: "",
                     maxLines: 4,
                     maxLength: 200,
+                    inputFormatters: [],
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -140,7 +158,27 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                           ),
                         ),
                         onPressed: () {
-                          // handle confirmation
+                          if (sendFrom == null || sendTo == null || amountController.text.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please fill in all required fields.'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ConfirmationPage(
+                                amount: double.parse(amountController.text), // Pass the entered amount
+                                purpose: purposeController.text,
+                                fromAccount: sendFrom!,
+                                toAccount: sendTo!,
+                              ),
+                            ),
+                          );
                         },
                         child: const Text(
                           "Confirmation",
@@ -169,7 +207,6 @@ class OwnAccountPageState extends State<OwnAccountPage> {
       children: [
         Text(label),
         const SizedBox(height: 6),
-        // Custom dropdown container
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -182,126 +219,104 @@ class OwnAccountPageState extends State<OwnAccountPage> {
               ),
             ],
           ),
-          child:
-              value == null
-                  ? DropdownButtonFormField<String>(
-                    value: value,
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      border: InputBorder.none,
-                      hintText: "Select an existing account",
+          child: value == null
+              ? DropdownButtonFormField<String>(
+                  value: value,
+                  decoration: const InputDecoration(
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    border: InputBorder.none,
+                    hintText: "Select an existing account",
+                  ),
+                  isExpanded: true,
+                  icon: const Icon(
+                    Icons.arrow_drop_down_circle_outlined,
+                    color: Colors.teal,
+                  ),
+                  items: items.map((item) {
+                    return DropdownMenuItem<String>(
+                      value: item,
+                      child: Text(item),
+                    );
+                  }).toList(),
+                  onChanged: onChanged,
+                )
+              : Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF00C191), Color(0xFF00E0A8)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
                     ),
-                    isExpanded: true,
-                    icon: const Icon(
-                      Icons.arrow_drop_down_circle_outlined,
-                      color: Colors.teal,
-                    ),
-                    items:
-                        items.map((item) {
-                          return DropdownMenuItem<String>(
-                            value: item,
-                            child: Text(item),
-                          );
-                        }).toList(),
-                    onChanged: onChanged,
-                  )
-                  : Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF00C191), Color(0xFF00E0A8)],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        ...items.map((item) {
-                          return GestureDetector(
-                            onTap: () => onChanged(item),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.9),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Emerald Bank Savings',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Text(
-                                          '4363 **** **** ****',
-                                          style: TextStyle(
-                                            color: Colors.black.withOpacity(
-                                              0.6,
-                                            ),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      ...items.map((item) {
+                        return GestureDetector(
+                          onTap: () => onChanged(item),
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'Available Balance',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.black.withOpacity(0.6),
-                                        ),
+                                      const Text(
+                                        'Emerald Bank Savings',
+                                        style: TextStyle(fontWeight: FontWeight.bold),
                                       ),
                                       Text(
-                                        '₱53,501.25',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
+                                        '4363 **** **** ****',
+                                        style: TextStyle(
+                                          color: Colors.black.withOpacity(0.6),
+                                          fontSize: 12,
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(width: 8),
-                                  // Show checkmark for selected item
-                                  if (item == value)
-                                    Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.green,
-                                      ),
-                                      child: Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: const [
+                                    Text(
+                                      'Available Balance',
+                                      style: TextStyle(fontSize: 12, color: Colors.black54),
                                     ),
-                                ],
-                              ),
+                                    Text(
+                                      '₱53,501.25',
+                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                if (item == value)
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.green,
+                                    ),
+                                    child: const Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                              ],
                             ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
+                          ),
+                        );
+                      }).toList(),
+                    ],
                   ),
+                ),
         ),
       ],
     );
@@ -314,6 +329,7 @@ class OwnAccountPageState extends State<OwnAccountPage> {
     TextInputType? keyboardType,
     int? maxLines,
     int? maxLength,
+    required List<TextInputFormatter> inputFormatters,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -337,12 +353,10 @@ class OwnAccountPageState extends State<OwnAccountPage> {
             keyboardType: keyboardType,
             maxLines: maxLines ?? 1,
             maxLength: maxLength,
+            inputFormatters: inputFormatters,
             decoration: InputDecoration(
               hintText: hintText,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               border: InputBorder.none,
               counterText: '',
             ),
@@ -352,3 +366,5 @@ class OwnAccountPageState extends State<OwnAccountPage> {
     );
   }
 }
+
+class A6E {}

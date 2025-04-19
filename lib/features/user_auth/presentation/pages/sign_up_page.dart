@@ -1,8 +1,8 @@
-import 'package:emeraldbank_mobileapp/features/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/login_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/sign_up_page_2.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/date_container_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/form_container_widget.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -12,121 +12,322 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
-
-  final FirebaseAuthServices _auth = FirebaseAuthServices();
   bool isSigningUp = false;
 
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _nickNameController = TextEditingController();
+  final TextEditingController _accountNameController = TextEditingController();
+  final TextEditingController _accountNumberController = TextEditingController();
+  final TextEditingController _birthDateController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _nickNameController.dispose();
+    _accountNameController.dispose();
+    _accountNumberController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _phoneController.dispose();
+    _birthDateController.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime(2000), // default date
+      firstDate: DateTime(1900), // earliest DOB
+      lastDate: DateTime.now(),  // today is the latest allowed
+    );
+
+    if (pickedDate != null) {
+      String formattedDate = "${pickedDate.month.toString().padLeft(2, '0')}/"
+                            "${pickedDate.day.toString().padLeft(2, '0')}/"
+                            "${pickedDate.year}";
+      setState(() {
+        _birthDateController.text = formattedDate;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Sign up"),
+        title: Text("Registration",
+        style: TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+        ),
+        ),
+        centerTitle: true,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text("Sign up", style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
-              
-              
-              ),
-              SizedBox(
-                height: 30
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            SizedBox(height: 5),
+            Row(
+              children: [
+                Text(
+                "Enter your account \ndetails",
+                style: TextStyle(
+                  fontSize: 28,
+                  color: Color(0xFF06D6A0),
+                  fontWeight: FontWeight.w600
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12,),
+            Row(
+                children: [
+                  Text(
+                    "Nickname",
+                    style: TextStyle(
+                      color: Color(0xFF1A1819), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
               FormContainerWidget(
-                controller: _usernameController,
-                hintText: "Username",
-                isPasswordField: false,
+                controller: _nickNameController,
+                hintText: "ex. Juan",),
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    "Account Holder Name (Full Name)",
+                    style: TextStyle(
+                      color: Color(0xFF1A1819), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
-              SizedBox(
-                height: 10,
+              FormContainerWidget(
+                controller: _accountNameController,
+                hintText: "ex. Juan Dela Cruz",),
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    "Account Number or Debit Card Number",
+                    style: TextStyle(
+                      color: Color(0xFF1A1819), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              FormContainerWidget(
+                controller: _accountNumberController,
+                hintText: "ex. 1234456778904209 (12 digits)",),
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    "Date of Birth",
+                    style: TextStyle(
+                      color: Color(0xFF1A1819), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              DateContainerWidget(
+                controller: _birthDateController,
+                hintText: "MM/DD/YYYY",
+                readOnly: true,
+                onTap: () => _selectDate(context),
+              ),
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    "Email Address linked to Emerald Account",
+                    style: TextStyle(
+                      color: Color(0xFF1A1819), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
               FormContainerWidget(
                 controller: _emailController,
-                hintText: "Email",
-                isPasswordField: false,
-              ),
-              SizedBox(
-                height: 10,
+                hintText: "sample@email.com",),
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Text(
+                    "Contact Number",
+                    style: TextStyle(
+                      color: Color(0xFF1A1819), 
+                      fontSize: 12, 
+                      fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
               FormContainerWidget(
-                controller: _passwordController,
-                hintText: "Password",
-                isPasswordField: true,
-              ),
-              SizedBox(
-                height: 30,
-              ),
-              GestureDetector(
-                onTap: _signUp,
-                child: Container(
-                  width: double.infinity,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(10)
-                  ),
-                  child: Center(child: isSigningUp ? CircularProgressIndicator(color: Colors.white,) : Text("Sign up", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),)),
-                ),
-              ),
-              SizedBox(height: 20,),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Already have an account?"),
-                  SizedBox(width: 5,),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage()));
-                    },
-                    child: Text("Login", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                  )
-                ],
-              )
-            ],
-          ),
+                controller: _phoneController,
+                hintText: "+11234567890",),
+              SizedBox(height: 12),
+              
+          ],
         ),
-      ),
+        ),
+        bottomNavigationBar:               
+          GestureDetector(
+                  onTap: () async {
+                  final String accountNickName = _nickNameController.text.trim();
+                  final String accountName = _accountNameController.text.trim();
+                  final String accountNumber = _accountNumberController.text.trim();
+                  final String birthDate = _birthDateController.text.trim();
+                  final String email = _emailController.text.trim();
+                  final String phone = _phoneController.text.trim();
+
+                  if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Please complete all fields.")),
+                    );
+                    return;
+                  }
+
+                  setState(() => isSigningUp = true);
+
+                  try {
+                    final querySnapshot = await FirebaseFirestore.instance
+                        .collection('debitCardDatabase')
+                        .where('accountNumber', isEqualTo: accountNumber)
+                        .where('accountName', isEqualTo: accountName)
+                        .where('email', isEqualTo: email)
+                        .where('birthDate', isEqualTo: birthDate)
+                        .get();
+
+                    if (querySnapshot.docs.isNotEmpty) {
+                      // ✅ Details matched, proceed to SignUpPage2
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SignUpPage2(
+                            accountNickName: accountNickName,
+                            accountNumber: accountNumber,
+                            accountName: accountName,
+                            birthDate: birthDate,
+                            email: email,
+                            phone: phone,
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Invalid Account. Please check your details.")),
+                      );
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error verifying account: $e")),
+                    );
+                  } finally {
+                    setState(() => isSigningUp = false);
+                  }
+                },
+                // onTap: _signUp,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: 36,
+                    left: 16,
+                    right: 16),
+                  child: Container(
+                    width: double.infinity,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF06D6A0),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: isSigningUp
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text("Next", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
+        ),
+    
     );
   }
 
-  void _signUp() async {
-    String username = _usernameController.text;
-    String email = _emailController.text;
-    String password = _passwordController.text;
+//   void _signUp() async {
+//     String email = _emailController.text;
+//     String password = _passwordController.text;
+//     String phone = _phoneController.text;
+//     String name = _nameController.text;
 
-  setState(() {
-    isSigningUp = true; 
-  });
+//     // Validation for phone number format
+//   if (phone.isEmpty || !phone.startsWith('+')) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text("Please enter a valid phone number with country code (e.g., +1234567890)")),
+//       );
+//       return;
+//     }
 
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
+//     setState(() => isSigningUp = true);
 
-  setState(() {
-    isSigningUp = false; 
-  });
-
-    if (user != null){
-      print("User is successfully created");
-      Navigator.pushNamed(context, "/main");
-    }
-    else{
-      print("Some error happened");
-    }
-
-  }
-
+//     try {
+//       // ✅ Only send OTP first — no account creation yet
+//       await _auth.verifyPhoneNumber(
+//         phoneNumber: phone,
+//         verificationCompleted: (PhoneAuthCredential credential) async {
+//           // Optional: You can handle instant verification here if needed
+//           Navigator.push(
+//             context,
+//             MaterialPageRoute(
+//               builder: (context) => OtpVerificationPage(
+//                 isSignUp: true,
+//                 email: email,
+//                 password: password,
+//                 phone: phone,
+//                 name: name,
+//                 // credential: credential,
+//                 verificationId: '', // not needed here
+//               ),
+//             ),
+//           );
+//         },
+//         verificationFailed: (FirebaseAuthException e) {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(content: Text("Phone verification failed: ${e.message}")),
+//           );
+//         },
+//         codeSent: (String verificationId, int? resendToken) {
+//           // ✅ Proceed to OTP page with data
+//           Navigator.push(
+//             context,
+//             MaterialPageRoute(
+//               builder: (context) => OtpVerificationPage(
+//                 verificationId: verificationId,
+//                 isSignUp: true,
+//                 email: email,
+//                 password: password,
+//                 phone: phone,
+//                 name: name,
+//               ),
+//             ),
+//           );
+//         },
+//         codeAutoRetrievalTimeout: (String verificationId) {
+//           print("Auto retrieval timeout: $verificationId");
+//         },
+//       );
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sign Up Error: $e")));
+//     } finally {
+//       setState(() => isSigningUp = false);
+//     }
+//   }
 }

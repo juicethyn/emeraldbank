@@ -1,6 +1,8 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/authentication/otp_verification_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/sign_up_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/form_container_widget.dart';
+import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
@@ -16,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuthServices _auth = FirebaseAuthServices();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  String _verificationId = ''; // To store the verification ID for OTP verification
 
   @override
   void dispose() {
@@ -23,78 +26,108 @@ class _LoginPageState extends State<LoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
-  
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Login"),
-        automaticallyImplyLeading: false,
-      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("Login", style: TextStyle(fontSize: 27,fontWeight: FontWeight.bold),
-              
-              
+              Image.asset(
+                'lib/assets/pictures/emerald_logo_white.png',
+                width: 100,
+                height: 100,
+                color: Color(0xFF06D6A0),
+                colorBlendMode: BlendMode.srcIn,
               ),
-              SizedBox(
-                height: 30
+              SizedBox(height: 4),
+              Text(
+                "EmeraldBank",
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF044E42)),
               ),
-              FormContainerWidget(
-                controller: _emailController,
-                hintText: "Email",
-                isPasswordField: false,
+              SizedBox(height: 80),
+              Row(
+                children: [
+                  Text(
+                    "Username/Email",
+                    style: TextStyle(color: Color(0xFF1A1819), fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
-              SizedBox(
-                height: 10,
+              FormContainerWidget(controller: _emailController, isPasswordField: false),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Text(
+                    "Password",
+                    style: TextStyle(color: Color(0xFF1A1819), fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
-              FormContainerWidget(
-                controller: _passwordController,
-                hintText: "Password",
-                isPasswordField: true,
+              FormContainerWidget(controller: _passwordController, hintText: "", isPasswordField: true),
+              SizedBox(height: 2),
+              GestureDetector(
+                onTap: () {
+                  showSnackbarMessage(context, "Forgot password Under Development");
+                },
+                child: Row(
+                  children: [
+                    Text(
+                      "Forgot password?",
+                      style: TextStyle(color: Color(0xFF044E42), fontSize: 14, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(
-                height: 30,
-              ),
+              SizedBox(height: 30),
               GestureDetector(
                 onTap: _sigIn,
                 child: Container(
                   width: double.infinity,
                   height: 45,
                   decoration: BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(10)
+                    color: Color(0xFF06D6A0),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Center(
-                    child: _isSigning ? CircularProgressIndicator(color: Colors.white) : Text(
-                      "Login", 
-                      style: 
-                      TextStyle(
-                        color: Colors.white, 
-                        fontWeight: FontWeight.bold),
-                        )
-                      ),
+                    child: _isSigning
+                        ? CircularProgressIndicator(color: Colors.white)
+                        : Text(
+                            "Login",
+                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                  ),
                 ),
               ),
-              SizedBox(height: 20,),
+              SizedBox(height: 24),
+              Text(
+                "Version 1.4.3",
+                style: TextStyle(color: Color(0xFF1A1819).withAlpha(128), fontSize: 10, fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?"),
-                  SizedBox(width: 5,),
+                  Text(
+                    "Don’t have an Online Banking?",
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(width: 5),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpPage()));
                     },
-                    child: Text("Sign Up", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                  )
+                    child: Text(
+                      "Sign Up",
+                      style: TextStyle(color: Color(0xFF028A6E), fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -103,29 +136,58 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _sigIn() async {
-    // String username = _usernameController.text;
-
-    setState((){
+    setState(() {
       _isSigning = true;
     });
 
     String email = _emailController.text;
     String password = _passwordController.text;
 
+    // Attempt to sign in with email/password
     User? user = await _auth.signInWithEmailAndPassword(email, password);
 
-    setState((){ 
+    setState(() {
       _isSigning = false;
     });
 
-    if (user != null){
-      print("User is successfully Signed in");
-      Navigator.pushNamed(context, "/main");
-    }
-    else{
+    if (user != null) {
+      print("User is successfully signed in");
+
+      // After email/password login, trigger the OTP phone verification
+      String phoneNumber = user.phoneNumber ?? ''; // Use the phone number from the user profile
+
+      if (phoneNumber.isNotEmpty) {
+        // Send OTP to the phone number
+        _auth.verifyPhoneNumber(
+          phoneNumber,
+          (PhoneAuthCredential credential) {
+            // On verification completion, sign the user in
+            _auth.signInWithOTP(_verificationId, credential.smsCode!);
+            Navigator.pushNamed(context, "/main");
+          },
+          (errorMessage) {
+            print(errorMessage);
+          },
+          (verificationId) {
+            // Store the verification ID to use it for OTP verification
+            setState(() {
+              _verificationId = verificationId;
+            });
+            // Prompt the user to enter OTP here
+            // _showOtpDialog();
+            Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpVerificationPage(verificationId: verificationId),
+            ),
+            );
+          },
+        );
+      } else {
+        print("Phone number not available for this user.");
+      }
+    } else {
       print("Some error happened");
     }
-
   }
-
 }

@@ -1,12 +1,605 @@
-import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
+import 'package:emeraldbank_mobileapp/models/user_model.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
+class HomePage extends StatefulWidget {
+  final UserModel? user;
+
+  // Pass `key` directly to the super constructor
+  HomePage({Key? key, this.user}) : super(key: key);
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final List<Map<String, dynamic>> items = [
+    {
+      'image': 'lib/assets/shortcuts_icon/send.png',
+      'text': 'Send',
+      'onTap': (BuildContext context) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => SendTransferScreen()),
+        );
+      },
+    },
+    {
+      'image': 'lib/assets/shortcuts_icon/bills.png',
+      'text': 'Bills',
+      'onTap': (BuildContext context) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => BillsPage()),
+        );
+      },
+    },
+    {
+      'image': 'lib/assets/shortcuts_icon/more.png',
+      'text': 'More',
+      'onTap': (BuildContext context) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => SendPage()),
+        );
+      },
+    },
+  ];
+
+ // naka const??
+  @override
   Widget build(BuildContext context) {
+    UserModel? user = widget.user;
+
     return Scaffold(
-      body: Text("This is the profile page"),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        HomeTextButtonWidget(
+                          buttonText: "Savings", 
+                          onPressed: () {
+                            print("This is the savings button");
+                          },
+                          backgroundColor: Color(0xFF028A6E),
+                          textColor: Colors.white,
+                          ),
+                        SizedBox(width: 12),
+                        HomeTextButtonWidget(
+                          buttonText: "Credits", 
+                          onPressed: () { 
+                            print("This is the credit button");
+                          },
+                          horizontalPadding: 35,
+                          ),
+                        SizedBox(width: 12),
+                        HomeTextButtonWidget(
+                          buttonText: "Loan", 
+                          onPressed: () { 
+                            print("This is the loan button");
+                          },
+                          horizontalPadding: 40,
+                          ),
+                      ],
+                    ),
+                  ), //Savings, Credits, Loan Buttons
+              
+                  Container(
+                    width: double.infinity,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF06D6A0), Color(0xFF2CFFC8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        left: 16,
+                        top: 4,
+                      ),
+                      child: Stack(
+                        children: [
+                          // Column for text elements
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Align(
+                                alignment: Alignment(0.9, 1),
+                                child: Text(
+                                  "Account Savings #1",
+                                  style: TextStyle(
+                                    color: Color(0xFF1A1819),
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                "Available Balance",
+                                style: TextStyle(
+                                  color: Color(0xFF044E42),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              Text(
+                                "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600
+                                ),
+                                ),
+                            ],
+                          ),
+                          Positioned(
+                            left: 90,
+                            top: 2,  // Adjust the top position as needed  // Adjust the right position as needed
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.visibility, // Eye icon
+                                size: 16, // You can adjust the size of the icon
+                                color: Colors.white, // Icon color (same as text color or any color you want)
+                              ),
+                              onPressed: () {
+                                print("Eye icon clicked");
+                              },
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Image.asset('lib/assets/pictures/background_logo.png')
+                            ),
+                          Positioned(
+                            bottom: 18,
+                            left: 140,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0),
+                              child: Row(
+                                children: [
+                                  Text("")
+                                ],
+                                ),
+                            )
+                            )
+                        ],
+                      ),
+                    ),
+                  ), //Account Balance Card should be Stateful
+                  
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: 24,
+                      bottom: 8,
+                      ),
+                    child: Container(
+                      width: double.infinity,
+                      height: 205, 
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFF6D6A6B), Color(0xFF413F40), Color(0xFF1A1819)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          top: 18.0,
+                          left: 12.00,
+                          right: 24,
+                          bottom: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    Image.asset(
+                                      'lib/assets/pictures/emerald_logo_white.png',
+                                      width: 24,
+                                      height: 24,
+                                    ),
+                                    Text("EmeraldBank",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white
+                                      )
+                                      ,)
+                                  ]
+                                ),
+                                SvgPicture.asset(
+                                  'lib/assets/icons/visa_icon.svg',
+                                  width: 53,
+                                  height: 21,
+                                )
+                              ],
+                            ),
+                            SizedBox(height: 24),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                right: 28.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("${user?.accountNumber}",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.visibility_off, // Eye icon
+                                      size: 24, // You can adjust the size of the icon
+                                      color: Colors.white, // Icon color (same as text color or any color you want)
+                                    ),
+                                    onPressed: () {
+                                      print("Eye icon clicked");
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("ISSUED \n ON",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w300,
+                                      color: Colors.white
+                                    ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text("${user?.issuedOn}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.normal,
+                                      color: Colors.white
+                                    ),
+                                    ),
+                                    
+                                    SizedBox(width: 12,),
+
+                                    Text("EXPIRES \n END",
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w300,
+                                      color: Colors.white
+                                    ),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text("${user?.expiresEnd}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.normal,
+                                      color: Colors.white
+                                    ),
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+
+                            SizedBox(height: 4),
+
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("CARD HOLDER NAME",
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w300,
+                                        color: Colors.white
+                                      ),),
+                                    Text("${user?.accountName}",
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w400,
+                                        color: Colors.white
+                                      ),),
+                                  ],
+                                ),
+                                Image.asset(
+                                  'lib/assets/pictures/chip.png',
+                                  width: 40,
+                                  height: 40,
+                                )
+                              ],
+                            )
+
+                          ],
+                        ),
+                      ),
+                    ),
+                  ), // Credit Card Details
+                ],
+              ),
+              
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Shortcuts",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700
+                  ),),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: TextButton(
+                      onPressed: () {
+                        print("This is the customize button");
+                      },
+                      child: Text("Customize",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF028A6E),
+                      ),
+                      ),
+                    )
+                  ),
+                ]
+              ),
+          
+              SizedBox(
+                width: double.infinity,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.start,
+                  children: List.generate(items.length, (index) {
+                    String imagePath = items[index]['image']!;
+                    String text = items[index]['text']!;
+                    final onTapCallback = items[index]['onTap'] as void Function(BuildContext);
+
+                    return ShortcutButton(
+                      imagePath: imagePath, 
+                      text: text, 
+                      onTapCallback: onTapCallback);
+                  }),
+                ),
+              ),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Container(
+                width: double.infinity,
+                height: 220,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Transactions",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600
+                          )
+                          ),
+                          Text(
+                            "View all",
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF028A6E)
+                          )
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 4,),
+                      Container(
+                        width: double.infinity,
+                        height: 1,
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(8)
+                        ),
+                      ),
+                      
+                      // Michael Cruz
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8 
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                ClipOval(
+                                child: Image.asset(
+                                  'lib/assets/pictures/profilepicture.png',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                    Text("Michael Cruz",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600
+                                      ),
+                                    ),
+                                    Text("Today, at 1:43pm",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500
+                                      ),
+                                    ),
+                                    ],
+                                  ),
+                                )
+                                  ],
+                            ),
+                            Text("-₱10,000.00",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.redAccent
+                              ),
+                            ),
+                          ],),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8 
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                ClipOval(
+                                child: Image.asset(
+                                  'lib/assets/pictures/profilepicture.png',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                    Text("Michael Cruz",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600
+                                      ),
+                                    ),
+                                    Text("Today, at 1:43pm",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500
+                                      ),
+                                    ),
+                                    ],
+                                  ),
+                                )
+                                  ],
+                            ),
+                            Text("-₱2,000.00",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.redAccent
+                              ),
+                            ),
+                          ],),
+                      ),
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8 
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                ClipOval(
+                                child: Image.asset(
+                                  'lib/assets/pictures/profilepicture.png',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 8.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                    Text("Michael Cruz",
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600
+                                      ),
+                                    ),
+                                    Text("Today, at 1:43pm",
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500
+                                      ),
+                                    ),
+                                    ],
+                                  ),
+                                )
+                                  ],
+                            ),
+                            Text("-₱5,000.00",
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.redAccent
+                              ),
+                            ),
+                          ],),
+                      ),
+
+                    ],
+                  ),
+                ) 
+              
+              ),
+            ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
+

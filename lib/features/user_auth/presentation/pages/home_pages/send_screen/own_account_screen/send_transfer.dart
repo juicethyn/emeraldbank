@@ -1,5 +1,5 @@
 
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/send_transfer_own_account..dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer_own_account..dart';
 import 'package:flutter/material.dart';
 
 class SendTransferScreen extends StatelessWidget {

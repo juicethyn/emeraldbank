@@ -1,3 +1,4 @@
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/authentication/otp_verification_page.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmationPage extends StatelessWidget {
@@ -7,12 +8,12 @@ class ConfirmationPage extends StatelessWidget {
   final String toAccount;
 
   const ConfirmationPage({
-    Key? key,
+    super.key,
     required this.amount,
     required this.purpose,
     required this.fromAccount,
     required this.toAccount,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +59,21 @@ class ConfirmationPage extends StatelessWidget {
                     color: Color(0xFF006D4F),
                   ),
                 ),
-                Container(
-                  width: 200,
-                  height: 2,
-                  color: const Color(0xFF006D4F),
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                Text(
+                  amount.toStringAsFixed(2), // Dynamically display the amount
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF006D4F),
+                  ),
                 ),
               ],
+            ),
+            Container(
+              width: 200,
+              height: 2,
+              color: const Color(0xFF006D4F),
+              margin: const EdgeInsets.symmetric(horizontal: 8),
             ),
             const SizedBox(height: 10),
             Text(
@@ -376,76 +385,60 @@ class ConfirmationPage extends StatelessWidget {
     );
   }
 
-  Widget buildActionButtons(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFEF5350),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
+ Widget buildActionButtons(BuildContext context) {
+  return Row(
+    children: [
+      Expanded(
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFEF5350),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+          ),
+          onPressed: () {
+            Navigator.pop(context); // Navigate back to the previous page
+          },
+          child: const Text(
+            'Cancel',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00503C),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00503C),
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
             ),
-            onPressed: () {
-              // Handle submit
-              showDialog(
-                context: context,
-                builder:
-                    (context) => AlertDialog(
-                      title: const Text('Transaction Successful'),
-                      content: const Text(
-                        'Your transfer has been completed successfully.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.popUntil(
-                              context,
-                              (route) => route.isFirst,
-                            );
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-              );
-            },
-            child: const Text(
-              'Submit',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const OtpVerificationPage(verificationId: '',), // Navigate to OTP Verification Page
               ),
+            );
+          },
+          child: const Text(
+            'Submit',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 }
