@@ -39,7 +39,7 @@ class _AccountPageSatate extends State<AccountPage> {
       final accountRefsSnapshot =
           await FirebaseFirestore.instance
               .collection('users')
-              .doc(user?.uid)
+              .doc(user.uid)
               .collection('accountReferences')
               .limit(1)
               .get();
@@ -214,7 +214,7 @@ class _AccountPageSatate extends State<AccountPage> {
                     final finalSize = iconSize > 128 ? iconSize : 128.0;
 
                     return Opacity(
-                      opacity: 0.5,
+                      opacity: 1.0,
                       child:
                           icon is IconData
                               ? Icon(

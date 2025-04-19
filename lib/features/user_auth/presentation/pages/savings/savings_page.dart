@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/addingAccounts/addingaccountsavings_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/savings/savingsdetails_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountsPage_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_card_accountspages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -319,10 +319,19 @@ class _SavingsPageState extends State<SavingsPage> {
                             isAccountNumber: true,
                             isHidden: !_eyeEnabled,
                             onTap: () {
-                              // To be implemented
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(card['docId'])),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => SavingsDetailsPage(
+                                        savingsId: card['docId'],
+                                      ),
+                                ),
                               );
+                              // ----------------------
+                              // ScaffoldMessenger.of(context).showSnackBar(
+                              //   SnackBar(content: Text(card['docId'])),
+                              // );
                             },
                           ),
                         ),

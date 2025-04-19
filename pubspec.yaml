@@ -77,6 +77,7 @@ flutter:
     - lib/assets/icons/loans_cardIcon.svg
     - lib/assets/icons/piggybank_cardIcon.svg
     - lib/assets/icons/return_customCircularHintYellow.svg
+    - lib/assets/icons/chart_line.svg
 
   # Shortcuts_Icon Folder
     - lib/assets/shortcuts_icon/send.png
@@ -138,6 +139,19 @@ flutter:
           weight: 800
         - asset: fonts/Montserrat-Black.ttf
           weight: 900
+    - family: Fira Code
+      fonts:
+      - asset: fonts/FiraCode-Light.ttf
+        weight: 300
+      - asset: fonts/FiraCode-Regular.ttf
+        weight: 400
+      - asset: fonts/FiraCode-Medium.ttf
+        weight: 500
+      - asset: fonts/FiraCode-SemiBold.ttf
+        weight: 600
+      - asset: fonts/FiraCode-Bold.ttf
+        weight: 700
+
         
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic

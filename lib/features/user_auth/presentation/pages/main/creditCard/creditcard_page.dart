@@ -82,8 +82,8 @@ class _CreditcardPageState extends State<CreditcardPage> {
         if (ref == null) continue;
 
         // After getting the creditCardRefs
-        print("Credit card refs: ${creditCardRefs?.length}");
-        print("First ref: ${creditCardRefs?.first}");
+        print("Credit card refs: ${creditCardRefs.length}");
+        print("First ref: ${creditCardRefs.first}");
 
         // When processing each ref
         print("Processing ref: $ref");
