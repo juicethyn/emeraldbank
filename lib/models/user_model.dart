@@ -8,18 +8,22 @@ class UserModel {
   final String birthDate;
   final String issuedOn;
   final String expiresEnd;
+  final String uid;
 
   UserModel({
-    required this.email, 
-    required this.phoneNumber, 
-    required this.balance, 
+    required this.email,
+    required this.phoneNumber,
+    required this.balance,
     required this.accountName,
     required this.accountNickName,
     required this.accountNumber,
     required this.birthDate,
     required this.issuedOn,
     required this.expiresEnd,
-    });
+    required this.uid,
+  });
+
+  
 
   // Factory constructor to create a UserModel from Firestore data
   factory UserModel.fromFirestore(Map<String, dynamic> data) {
@@ -33,6 +37,7 @@ class UserModel {
       birthDate: data['birthDate'] ?? '',
       issuedOn: data['issuedOn'] ?? '',
       expiresEnd: data['issuedOn'] ?? '',
+      uid: data['uid'] ?? '',
     );
   }
 }

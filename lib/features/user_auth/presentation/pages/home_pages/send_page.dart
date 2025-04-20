@@ -10,9 +10,7 @@ class SendPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Send Page")),
-      body: Center(
-        child: Text("User email: ${user?.email ?? 'No user'}"),
-      ),
+      body: Center(child: Text("User email: ${user?.email ?? 'No user'}")),
     );
   }
 }

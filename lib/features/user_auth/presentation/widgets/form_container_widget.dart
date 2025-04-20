@@ -68,15 +68,16 @@ class _FormContainerWidgetState extends State<FormContainerWidget> {
           filled: true,
           hintText: widget.hintText,
           hintStyle: TextStyle(color: Colors.black45),
-          suffixIcon: widget.isPasswordField == true
-              ? GestureDetector(
-                  onTap: () => setState(() => _obscureText = !_obscureText),
-                  child: Icon(
-                    _obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: _obscureText ? Colors.grey : Colors.blue,
-                  ),
-                )
-              : null,
+          suffixIcon:
+              widget.isPasswordField == true
+                  ? GestureDetector(
+                    onTap: () => setState(() => _obscureText = !_obscureText),
+                    child: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: _obscureText ? Colors.grey : Colors.blue,
+                    ),
+                  )
+                  : null,
         ),
       ),
     );
