@@ -78,6 +78,12 @@ flutter:
     - lib/assets/icons/piggybank_cardIcon.svg
     - lib/assets/icons/return_customCircularHintYellow.svg
     - lib/assets/icons/chart_line.svg
+    - lib/assets/icons/edit_profile_icon.svg
+    - lib/assets/icons/account_limit_icon.svg
+    - lib/assets/icons/get_help_icon.svg
+    - lib/assets/icons/logout_icon.svg
+    - lib/assets/icons/settings_icon.svg
+    - lib/assets/icons/ticket_icon.svg
 
   # Shortcuts_Icon Folder
     - lib/assets/shortcuts_icon/send.png

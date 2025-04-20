@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "com.example.emeraldbank_mobileapp"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973" // Check if your ndkVersion uses this one
+    ndkVersion = "29.0.13113456" // Check if your ndkVersion uses this one
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

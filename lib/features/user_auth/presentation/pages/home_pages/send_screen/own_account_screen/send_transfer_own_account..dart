@@ -1,6 +1,5 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/confirmation_ownaccount.dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

@@ -1,4 +1,8 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
+<<<<<<< HEAD
     "cmake.sourceDirectory": "C:/Users/juzzthyn/Desktop/emeraldbank_mobileapp/linux"
+=======
+    "cmake.sourceDirectory": "C:/flutter/emeraldbank-app/linux"
+>>>>>>> origin/kahitano
 }
