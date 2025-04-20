@@ -1,9 +1,13 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/confirmation_ownaccount.dart';
+import 'package:emeraldbank_mobileapp/models/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class OwnAccountPage extends StatefulWidget {
-  const OwnAccountPage({super.key});
+  final UserModel? user;
+
+  OwnAccountPage({Key? key, this.user}) : super(key: key);
 
   @override
   State<OwnAccountPage> createState() => OwnAccountPageState();
@@ -14,6 +18,25 @@ class OwnAccountPageState extends State<OwnAccountPage> {
   String? sendTo;
   final amountController = TextEditingController();
   final purposeController = TextEditingController();
+
+  double emeraldBankSavings1Balance = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchEmeraldBankSavings1Balance();
+  }
+
+  Future<void> fetchEmeraldBankSavings1Balance() async {
+    try {
+      // Fetch the balance from Firestore or UserModel
+      // Replace 'Emerald Bank Savings 1' with the actual account identifier
+      emeraldBankSavings1Balance = widget.user?.balance ?? 0.0;
+      setState(() {});
+    } catch (e) {
+      print("Error fetching balance: $e");
+    }
+  }
 
   // ✅ Custom input formatter allowing up to 2 decimal places only
   final amountInputFormatter = TextInputFormatter.withFunction((
@@ -38,6 +61,7 @@ class OwnAccountPageState extends State<OwnAccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    UserModel? user = widget.user;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -109,14 +133,14 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                     inputFormatters: [amountInputFormatter],
                   ),
                   const SizedBox(height: 8),
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Text.rich(
                       TextSpan(
                         text: 'You have a current balance of ',
                         children: [
                           TextSpan(
-                            text: '₱10,000.00',
+                            text: '₱${user?.balance}',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Color.fromARGB(255, 0, 95, 71),
@@ -181,7 +205,8 @@ class OwnAccountPageState extends State<OwnAccountPage> {
 
                           // Define the user's current balance (replace this with the actual balance from your backend or state)
                           double currentBalance =
-                              10000.0; // Example balance fetched from Firestore
+                              user!
+                                  .balance; // Example balance fetched from Firestore
 
                           // Check if the entered amount exceeds the current balance
                           if (enteredAmount > currentBalance) {
@@ -203,10 +228,11 @@ class OwnAccountPageState extends State<OwnAccountPage> {
                               builder:
                                   (context) => ConfirmationPage(
                                     amount:
-                                        enteredAmount, // Pass the entered amount
+                                    enteredAmount, // Pass the entered amount
                                     purpose: purposeController.text,
                                     fromAccount: sendFrom!,
                                     toAccount: sendTo!,
+                                    user: user
                                   ),
                             ),
                           );

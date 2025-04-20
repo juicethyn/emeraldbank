@@ -1,7 +1,10 @@
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/authentication/otp_verification_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/sent_screen.dart';
+import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ConfirmationPage extends StatelessWidget {
+  final UserModel? user;
   final double amount;
   final String purpose;
   final String fromAccount;
@@ -9,6 +12,7 @@ class ConfirmationPage extends StatelessWidget {
 
   const ConfirmationPage({
     super.key,
+    this.user,
     required this.amount,
     required this.purpose,
     required this.fromAccount,
@@ -77,7 +81,7 @@ class ConfirmationPage extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Your new balance will be ₱${(10000.00 - amount).toStringAsFixed(2)}',
+              'Your new balance will be ₱${(user!.balance - amount).toStringAsFixed(2)}',
               style: const TextStyle(fontSize: 16, color: Colors.black87),
             ),
             const SizedBox(height: 30),
@@ -385,60 +389,86 @@ class ConfirmationPage extends StatelessWidget {
     );
   }
 
- Widget buildActionButtons(BuildContext context) {
-  return Row(
-    children: [
-      Expanded(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFEF5350),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          onPressed: () {
-            Navigator.pop(context); // Navigate back to the previous page
-          },
-          child: const Text(
-            'Cancel',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-      const SizedBox(width: 16),
-      Expanded(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00503C),
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const OtpVerificationPage(verificationId: '',), // Navigate to OTP Verification Page
+  Widget buildActionButtons(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF5350),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
               ),
-            );
-          },
-          child: const Text(
-            'Submit',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Navigate back to the previous page
+            },
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
-      ),
-    ],
-  );
-}
+        const SizedBox(width: 16),
+        Expanded(
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF00503C),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
+            onPressed: () async {
+              try {
+                // Update the user's balance
+                double newBalance = user!.balance - amount;
+
+                // Update the balance in Firestore (or your backend)
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user!.uid) // Replace with the user's unique ID
+                    .update({'balance': newBalance});
+
+                // Navigate to the ReceiptPage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReceiptPage(
+                      amount: amount,
+                      purpose: purpose,
+                      fromAccount: fromAccount,
+                      toAccount: toAccount,
+                      newBalance: newBalance,
+                    ),
+                  ),
+                );
+              } catch (e) {
+                // Handle errors (e.g., network issues)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to complete the transaction: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            child: const Text(
+              'Submit',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

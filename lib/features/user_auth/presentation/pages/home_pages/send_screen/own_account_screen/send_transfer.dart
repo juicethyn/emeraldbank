@@ -2,12 +2,18 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:flutter/material.dart';
 
-class SendTransferScreen extends StatelessWidget {
+class SendTransferScreen extends StatefulWidget {
   final UserModel? user;
-  const SendTransferScreen({Key? key, this.user}) : super(key: key);
+  SendTransferScreen({Key? key, this.user}) : super(key: key);
 
   @override
+  State<SendTransferScreen> createState() => _SendTransferScreenState();
+}
+
+class _SendTransferScreenState extends State<SendTransferScreen> {
+  @override
   Widget build(BuildContext context) {
+    UserModel? user = widget.user;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -53,7 +59,7 @@ class SendTransferScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const OwnAccountPage(),
+                          builder: (context) => OwnAccountPage(user: user),
                         ),
                       );
                     },
