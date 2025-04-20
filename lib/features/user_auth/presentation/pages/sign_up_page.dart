@@ -5,9 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 
-// Things needs to be done here:
-// 1. Crosschecking if email is already registered, thus it will make an error. - Nyht
-
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -17,6 +14,9 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   bool isSigningUp = false;
+  bool isTrueCorrect = false;
+  bool isTOSChecked = false;
+  bool isDataPrivacy = false;
 
   final TextEditingController _nickNameController = TextEditingController();
   final TextEditingController _accountNameController = TextEditingController();
@@ -199,7 +199,78 @@ class _SignUpPageState extends State<SignUpPage> {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(11)],
                 ),
-              SizedBox(height: 128),
+              SizedBox(height: 4),
+          Row(
+            children: [
+              Checkbox(
+                value: isTrueCorrect,
+                activeColor: Color(0xFF06D6A0),
+                checkColor: Colors.white,
+                onChanged: (bool? value) {
+                  setState(() {
+                    isTrueCorrect = value ?? false;
+                  });
+                },
+              ),
+              Expanded(
+                child: Text(
+                  "I hereby certify that the above information is true and correct.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF1A1819),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Checkbox(
+                value: isTOSChecked,
+                activeColor: Color(0xFF06D6A0),
+                checkColor: Colors.white,
+                onChanged: (bool? value) {
+                  setState(() {
+                    isTOSChecked = value ?? false;
+                  });
+                },
+              ),
+              Expanded(
+                child: Text(
+                  "I hereby certify that the above information is true and correct.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF1A1819),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              Checkbox(
+                value: isDataPrivacy,
+                activeColor: Color(0xFF06D6A0),
+                checkColor: Colors.white,
+                onChanged: (bool? value) {
+                  setState(() {
+                    isDataPrivacy = value ?? false;
+                  });
+                },
+              ),
+              Expanded(
+                child: Text(
+                  "I have read and agreed to the Data Privacy Consent.",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF1A1819),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 12),
 
               GestureDetector(
                         onTap: () async {
@@ -213,6 +284,13 @@ class _SignUpPageState extends State<SignUpPage> {
                         if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Please complete all fields.")),
+                          );
+                          return;
+                        }
+
+                        if (!isTOSChecked && !isDataPrivacy && !isTrueCorrect) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Please check all boxes before cont")),
                           );
                           return;
                         }
@@ -261,7 +339,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         width: double.infinity,
                         height: 45,
                         decoration: BoxDecoration(
-                          color: Color(0xFF06D6A0),
+                          color: isTOSChecked && isTrueCorrect && isDataPrivacy ?Color(0xFF06D6A0) : Colors.grey,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Center(
@@ -270,6 +348,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               : Text("Next", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ),
                       ),
+                      
               ),
 
 

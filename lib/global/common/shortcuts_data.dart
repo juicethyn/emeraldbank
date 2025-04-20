@@ -23,41 +23,27 @@ final List<Map<String, dynamic>> allShortcuts = [
     'key': 'games',
     'image': 'lib/assets/shortcuts_icon/games.png',
     'text': 'Games',
-    'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage())); // Change this one soon
-    },
+
   },
   {
     'key': 'load',
     'image': 'lib/assets/shortcuts_icon/load.png',
     'text': 'Load',
-    'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage())); // Change this one soon
-    },
   },
   {
     'key': 'topup',
     'image': 'lib/assets/shortcuts_icon/topup.png',
     'text': 'Topup',
-    'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage())); // Change this one soon
-    },
   },
   {
     'key': 'support',
     'image': 'lib/assets/shortcuts_icon/support.png',
     'text': 'Support',
-    'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage())); // Change this one soon
-    },
   },
     {
     'key': 'more',
     'image': 'lib/assets/shortcuts_icon/more.png',
     'text': 'More',
-    'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SendPage()));
-    },
   },
   // Add more as needed
 ];

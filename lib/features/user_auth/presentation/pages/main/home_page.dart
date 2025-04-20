@@ -434,8 +434,8 @@ class _HomePageState extends State<HomePage> {
                           break;
                         // add more actions here...
                         default:
-                          // maybe show a snackbar or log?
-                          print('Unknown shortcut key: $key');
+                          showSnackbarMessage(context, "Feature is currently Under Development");
+                          // print('Unknown shortcut key: $key');
                       }
                               }   
                       );
