@@ -87,7 +87,7 @@ class ReceiptPage extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context); // Navigate back to the previous page
+                  Navigator.pushNamed(context, "/main"); // Navigate back to the previous page
                 },
                 child: const Text('Done'),
               ),
