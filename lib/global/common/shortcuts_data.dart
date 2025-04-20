@@ -1,5 +1,6 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
+import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:flutter/material.dart';
 
 final List<Map<String, dynamic>> allShortcuts = [
@@ -54,7 +55,7 @@ final List<Map<String, dynamic>> investmentShortcuts = [
     'image': 'lib/assets/shortcuts_icon/stocks.png',
     'text': 'Stocks',
     'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SendPage()));
+      showSnackbarMessage(context, "Feature is currently Under Development");
     },
   },
   {
@@ -62,7 +63,7 @@ final List<Map<String, dynamic>> investmentShortcuts = [
     'image': 'lib/assets/shortcuts_icon/funds.png',
     'text': 'Funds',
     'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SendPage()));
+      showSnackbarMessage(context, "Feature is currently Under Development");
     },
   },
 
@@ -71,7 +72,7 @@ final List<Map<String, dynamic>> investmentShortcuts = [
     'image': 'lib/assets/shortcuts_icon/crypto.png',
     'text': 'Crypto',
     'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SendPage()));
+      showSnackbarMessage(context, "Feature is currently Under Development");
     },
   },
     {
@@ -79,7 +80,7 @@ final List<Map<String, dynamic>> investmentShortcuts = [
     'image': 'lib/assets/shortcuts_icon/insurance.png',
     'text': 'Insurance',
     'onTap': (BuildContext context) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SendPage()));
+      showSnackbarMessage(context, "Feature is currently Under Development");
     },
   },
 

@@ -279,7 +279,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         final String accountNumber = _accountNumberController.text.trim();
                         final String birthDate = _birthDateController.text.trim();
                         final String email = _emailController.text.trim();
-                        final String phone = "+1${_phoneController.text.trim().replaceFirst('0', '')}";
+                        final String phone = "+63${_phoneController.text.trim().replaceFirst('0', '')}";
 
                         if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(

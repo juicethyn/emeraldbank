@@ -50,6 +50,18 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+
+    // Automatically send OTP when the page loads
+    if (widget.phone != null) {
+      _sendOtp(widget.phone!);
+    } else {
+      debugPrint("Phone number is null. Cannot send OTP.");
+    }
+  }
+
   void _verifyOtp() async {
     String otp = _controllers.map((controller) => controller.text).join();
     if (otp.length != 6) return;
@@ -63,20 +75,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       );
 
       if (widget.isSignUp) {
-        // Manually verify OTP
-        final PhoneAuthCredential credential = PhoneAuthProvider.credential(
-          verificationId: widget.verificationId,
-          smsCode: otp,
-        );
-
-        // ✅ Now create account
+        // Create a new user
         UserCredential userCredential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: widget.email!, password: widget.password!);
+            .createUserWithEmailAndPassword(email: widget.email!, password: widget.password!);
 
-        // ✅ Link phone to the new user
+        // Link phone number to the user
         await userCredential.user!.linkWithCredential(credential);
 
-        // ✅ Add user to Firestore
+        // Add user details to Firestore
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'uid': userCredential.user!.uid,
           'email': widget.email,
@@ -91,11 +97,12 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           'expiresEnd': "03/15/2034",
         });
       } else {
-        // 🔐 Login flow: Sign in directly with phone OTP
+        // Sign in with the phone credential
         await FirebaseAuth.instance.signInWithCredential(credential);
       }
-    if(!mounted) return;
-    Navigator.pushReplacementNamed(context, "/main");
+
+    if (!mounted) return;
+      Navigator.pushReplacementNamed(context, "/main");
     } catch (e) {
       debugPrint("OTP verification error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -104,6 +111,36 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     } finally {
       setState(() => _isVerifying = false);
     }
+  }
+
+  void _sendOtp(String phoneNumber) async {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        // Auto-retrieval or instant verification
+        await FirebaseAuth.instance.signInWithCredential(credential);
+        Navigator.pushReplacementNamed(context, "/main");
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        debugPrint("Verification failed: ${e.message}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Verification failed. Please try again.")),
+        );
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        setState(() {
+          verificationId = verificationId; // Save the verification ID
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("OTP sent to $phoneNumber")),
+        );
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        setState(() {
+          verificationId = verificationId; // Save the verification ID
+        });
+      },
+    );
   }
 
   @override
