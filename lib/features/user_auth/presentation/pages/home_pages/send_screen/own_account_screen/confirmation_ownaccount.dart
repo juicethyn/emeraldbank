@@ -426,28 +426,46 @@ class ConfirmationPage extends StatelessWidget {
             ),
             onPressed: () async {
               try {
-                // Update the user's balance
-                double newBalance = user!.balance - amount;
+                // Query the savings document where `accountHolder` matches the user's document path
+                final savingsQuerySnapshot = await FirebaseFirestore.instance
+                    .collection('savings')
+                    .where('accountHolder', isEqualTo: "users/${user!.uid}") // Match the user's document path
+                    .get();
 
-                // Update the balance in Firestore (or your backend)
-                await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user!.uid) // Replace with the user's unique ID
-                    .update({'balance': newBalance});
+                if (savingsQuerySnapshot.docs.isNotEmpty) {
+                  // Get the first matching savings document
+                  final savingsDocRef = savingsQuerySnapshot.docs.first.reference;
 
-                // Navigate to the ReceiptPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReceiptPage(
-                      amount: amount,
-                      purpose: purpose,
-                      fromAccount: fromAccount,
-                      toAccount: toAccount,
-                      newBalance: newBalance,
+                  // Calculate the new balance
+                  double newBalance = user!.balance - amount;
+
+                  // Update the `currentBalance` in the `savingsAccountInformation` field
+                  await savingsDocRef.update({
+                    'currentBalance': newBalance,
+                  });
+
+                  // Navigate to the ReceiptPage
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ReceiptPage(
+                        amount: amount,
+                        purpose: purpose,
+                        fromAccount: fromAccount,
+                        toAccount: toAccount,
+                        newBalance: newBalance,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                } else {
+                  // Handle case where no matching savings document is found
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No savings account found for the user.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               } catch (e) {
                 // Handle errors (e.g., network issues)
                 ScaffoldMessenger.of(context).showSnackBar(

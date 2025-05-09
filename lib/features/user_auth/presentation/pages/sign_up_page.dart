@@ -130,7 +130,7 @@ class _SignUpPageState extends State<SignUpPage> {
               Row(
                 children: [
                   Text(
-                    "Account Number or Debit Card Number",
+                    "Account Number",
                     style: TextStyle(
                       color: Color(0xFF1A1819), 
                       fontSize: 12, 
@@ -140,11 +140,11 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               FormContainerWidget(
                 controller: _accountNumberController,
-                hintText: "ex. 1234456778904209 (16 digits)",
+                hintText: "ex. 123445677890 (12 digits)",
                 inputType: TextInputType.number,
                 inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(16)],
+                LengthLimitingTextInputFormatter(12)],
                 ),
               SizedBox(height: 12),
               Row(
@@ -274,66 +274,82 @@ class _SignUpPageState extends State<SignUpPage> {
 
               GestureDetector(
                         onTap: () async {
-                        final String accountNickName = _nickNameController.text.trim();
-                        final String accountName = _accountNameController.text.trim();
-                        final String accountNumber = _accountNumberController.text.trim();
-                        final String birthDate = _birthDateController.text.trim();
-                        final String email = _emailController.text.trim();
-                        final String phone = "+63${_phoneController.text.trim().replaceFirst('0', '')}";
+                              final String accountNickName = _nickNameController.text.trim();
+                              final String accountName = _accountNameController.text.trim();
+                              final String accountNumber = _accountNumberController.text.trim();
+                              final String birthDate = _birthDateController.text.trim();
+                              final String email = _emailController.text.trim();
+                              final String phone = "+63${_phoneController.text.trim().replaceFirst('0', '')}";
 
-                        if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Please complete all fields.")),
-                          );
-                          return;
-                        }
+                              if (accountName.isEmpty || accountNumber.isEmpty || birthDate.isEmpty || email.isEmpty || phone.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Please complete all fields.")),
+                                );
+                                return;
+                              }
 
-                        if (!isTOSChecked && !isDataPrivacy && !isTrueCorrect) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Please check all boxes before cont")),
-                          );
-                          return;
-                        }
+                              if (!isTOSChecked && !isDataPrivacy && !isTrueCorrect) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Please check all boxes before continuing.")),
+                                );
+                                return;
+                              }
 
-                        setState(() => isSigningUp = true);
+                              setState(() => isSigningUp = true);
 
-                        try {
-                          final querySnapshot = await FirebaseFirestore.instance
-                              .collection('debitCardDatabase')
-                              .where('accountNumber', isEqualTo: accountNumber)
-                              .where('accountName', isEqualTo: accountName)
-                              .where('email', isEqualTo: email)
-                              .where('birthDate', isEqualTo: birthDate)
-                              .get();
+                              try {
+                                // Step 1: Check the `registeredUsers` collection
+                                final registeredUsersSnapshot = await FirebaseFirestore.instance
+                                    .collection('registeredUsers')
+                                    .where('accountHolderName', isEqualTo: accountName)
+                                    .where('accountNumber', isEqualTo: accountNumber)
+                                    .where('birthDate', isEqualTo: birthDate)
+                                    .where('email', isEqualTo: email)
+                                    .get();
 
-                          if (querySnapshot.docs.isNotEmpty) {
-                            // ✅ Details matched, proceed to SignUpPage2
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SignUpPage2(
-                                  accountNickName: accountNickName,
-                                  accountNumber: accountNumber,
-                                  accountName: accountName,
-                                  birthDate: birthDate,
-                                  email: email,
-                                  phone: phone,
-                                ),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Invalid Account. Please check your details.")),
-                            );
-                          }
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Error verifying account: $e")),
-                          );
-                        } finally {
-                          setState(() => isSigningUp = false);
-                        }
-                      },
+                                if (registeredUsersSnapshot.docs.isEmpty) {
+                                  // No match found in `registeredUsers`
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("No matching registered user found. Please check your details.")),
+                                  );
+                                  return;
+                                }
+
+                                // Step 2: Check the `savings` collection
+                                final savingsSnapshot = await FirebaseFirestore.instance
+                                    .collection('savings')
+                                    .where('savingsAccountInformation.accountNumber', isEqualTo: accountNumber)
+                                    .where('accountHolderName', isEqualTo: accountName)
+                                    .get();
+
+                                if (savingsSnapshot.docs.isNotEmpty) {
+                                  // ✅ Details matched, proceed to SignUpPage2
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SignUpPage2(
+                                        accountNickName: accountNickName,
+                                        accountNumber: accountNumber,
+                                        accountName: accountName,
+                                        birthDate: birthDate,
+                                        email: email,
+                                        phone: phone,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Invalid Account. Please check your details.")),
+                                  );
+                                }
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error verifying account: $e")),
+                                );
+                              } finally {
+                                setState(() => isSigningUp = false);
+                              }
+                            },
                       // onTap: _signUp,
                       child: Container(
                         width: double.infinity,

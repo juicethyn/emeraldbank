@@ -62,56 +62,79 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
     }
   }
 
-  void _verifyOtp() async {
-    String otp = _controllers.map((controller) => controller.text).join();
-    if (otp.length != 6) return;
+void _verifyOtp() async {
+  String otp = _controllers.map((controller) => controller.text).join();
+  if (otp.length != 6) return;
 
-    setState(() => _isVerifying = true);
+  setState(() => _isVerifying = true);
 
-    try {
-      PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: widget.verificationId,
-        smsCode: otp,
-      );
+  try {
+    PhoneAuthCredential credential = PhoneAuthProvider.credential(
+      verificationId: widget.verificationId,
+      smsCode: otp,
+    );
 
-      if (widget.isSignUp) {
-        // Create a new user
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: widget.email!, password: widget.password!);
+    if (widget.isSignUp) {
+      // Create a new user
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: widget.email!, password: widget.password!);
 
-        // Link phone number to the user
-        await userCredential.user!.linkWithCredential(credential);
+      // Link phone number to the user
+      await userCredential.user!.linkWithCredential(credential);
 
-        // Add user details to Firestore
-        await _firestore.collection('users').doc(userCredential.user!.uid).set({
-          'uid': userCredential.user!.uid,
-          'email': widget.email,
-          'phoneNumber': widget.phone,
-          'createdAt': Timestamp.now(),
-          'balance': 10000,
-          'accountName': widget.accountName,
-          'accountNumber': widget.accountNumber,
-          'accountNickname': widget.accountNickName,
-          'birthDate': widget.birthDate,
-          'issuedOn': "03/15/2024",
-          'expiresEnd': "03/15/2034",
+      // Add user details to Firestore
+      final userDocRef = _firestore.collection('users').doc(userCredential.user!.uid);
+      await userDocRef.set({
+        'uid': userCredential.user!.uid,
+        'accountNickname': widget.accountNickName,
+        'email': widget.email,
+        'phoneNumber': widget.phone,
+        'createdAt': Timestamp.now(),
+        'birthDate': widget.birthDate,
+      });
+
+      // Check if the account exists in the savings collection
+      final querySnapshot = await _firestore
+          .collection('savings')
+          .where('savingsAccountInformation.accountNumber', isEqualTo: widget.accountNumber)
+          .where('accountHolderName', isEqualTo: widget.accountName)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        // If the account exists, update the accountHolder field in the savings document
+        final savingsDocRef = querySnapshot.docs.first.reference;
+        await savingsDocRef.update({
+          'accountHolder': userDocRef.path, // Set the Firestore reference to the user's document
         });
+
+        // Link the savings account to the user's accountReferences subcollection
+        final accountReferencesDocRef = userDocRef.collection('accountReferences').doc(userCredential.user!.uid);
+        await accountReferencesDocRef.set({
+          'creditCardAccounts': [], // Empty array
+          'loanAccounst': [],        // Empty array
+          'savingsAccounts': FieldValue.arrayUnion(["/" + savingsDocRef.path]), // Add the savings document path
+        });
+
+        debugPrint("Savings account successfully linked to the user.");
       } else {
-        // Sign in with the phone credential
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        debugPrint("No matching savings account found.");
       }
+    } else {
+      // Sign in with the phone credential
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    }
 
     if (!mounted) return;
-      Navigator.pushReplacementNamed(context, "/main");
-    } catch (e) {
-      debugPrint("OTP verification error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Invalid OTP. Please try again.")),
-      );
-    } finally {
-      setState(() => _isVerifying = false);
-    }
+    Navigator.pushReplacementNamed(context, "/main");
+  } catch (e) {
+    debugPrint("OTP verification error: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Invalid OTP. Please try again.")),
+    );
+  } finally {
+    setState(() => _isVerifying = false);
   }
+}
 
   void _sendOtp(String phoneNumber) async {
     await FirebaseAuth.instance.verifyPhoneNumber(

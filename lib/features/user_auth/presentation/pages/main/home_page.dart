@@ -56,8 +56,8 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  String formatAccountNumber(String accountNumber) {
-    final cleaned = accountNumber.replaceAll(RegExp(r'\D'), ''); // Remove non-digits
+  String formatAccountNumber(String accountCardNumber) {
+    final cleaned = accountCardNumber.replaceAll(RegExp(r'\D'), ''); // Remove non-digits
     final buffer = StringBuffer();
     for (int i = 0; i < cleaned.length; i++) {
       buffer.write(cleaned[i]);
@@ -266,8 +266,8 @@ class _HomePageState extends State<HomePage> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                  widget.isCardHidden ? "•••• •••• •••• ${user?.accountNumber.substring(user.accountNumber.length - 4)}" 
-                                  : user?.accountNumber != null ? formatAccountNumber(user!.accountNumber) : '',
+                                  widget.isCardHidden ? "•••• •••• •••• ${user?.accountCardNumber.substring(user.accountCardNumber.length - 4)}" 
+                                  : user?.accountCardNumber != null ? formatAccountNumber(user!.accountCardNumber) : '',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 21,

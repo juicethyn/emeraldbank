@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'home_page.dart';
 import 'account_page.dart';
-import 'investment_page.dart';
 import 'profile_page.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -35,19 +34,58 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   // Fetch the current user's data from Firestore
-  Future<void> _getCurrentUser() async {
-    String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    if (uid.isNotEmpty) {
-      // Fetch user data from Firestore
-      var userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+Future<void> _getCurrentUser() async {
+  String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+  if (uid.isNotEmpty) {
+    try {
+      // Step 1: Fetch the user's document from the `users` collection
+      final userDocRef = FirebaseFirestore.instance.collection('users').doc(uid);
+      final userDocSnapshot = await userDocRef.get();
 
-      if (userDoc.exists) {
+      if (userDocSnapshot.exists) {
+        // Create a UserModel from the `users` collection data
         setState(() {
-          currentUser = UserModel.fromFirestore(userDoc.data()!);
+          currentUser = UserModel.fromFirestore(userDocSnapshot.data()!);
         });
+      } else {
+        debugPrint("No user found with the given UID in the `users` collection.");
       }
+
+      // Step 2: Query the `savings` collection where `accountHolder` matches the user's document path
+      final savingsQuerySnapshot = await FirebaseFirestore.instance
+          .collection('savings')
+          .where('accountHolder', isEqualTo: "users/$uid") // Match the user's document path
+          .get();
+
+      if (savingsQuerySnapshot.docs.isNotEmpty) {
+        // Get the first matching savings document
+        final savingsData = savingsQuerySnapshot.docs.first.data();
+
+        // Update the UserModel with data from the `savings` collection while preserving `accountNickName`
+        setState(() {
+          currentUser = UserModel(
+            email: currentUser?.email ?? '',
+            phoneNumber: currentUser?.phoneNumber ?? '',
+            balance: savingsData['currentBalance']?.toDouble() ?? 0.0,
+            accountNickName: currentUser?.accountNickName ?? '', // Preserve accountNickName
+            accountName: savingsData['accountHolderName'] ?? '',
+            accountNumber: savingsData['savingsAccountInformation']['accountNumber'] ?? '',
+            accountCardNumber: savingsData['savingsAccountInformation']['cardNumber'] ?? '',
+            accountCVC: savingsData['savingsAccountInformation']['cvv_cvc'] ?? '',
+            birthDate: currentUser?.birthDate ?? '', // Preserve birthDate
+            issuedOn: savingsData['issuedDate'] ?? '',
+            expiresEnd: savingsData['expiryDate'] ?? '',
+            uid: uid,
+          );
+        });
+      } else {
+        debugPrint("No savings account found for the user in the `savings` collection.");
+      }
+    } catch (e) {
+      debugPrint("Error fetching user data: $e");
     }
   }
+}
 
   void toggleBalanceVisibility() {
     setState(() {
@@ -92,11 +130,11 @@ class _MainNavigationState extends State<MainNavigation> {
         isCardHidden: isCardHidden,
         onToggleCardVisibility: toggleCardVisibility),  // Pass currentUser to HomePage
       AccountPage(),
-      InvestmentPage(),
+      // InvestmentPage(),
       ProfilePage(),
     ];
 
-    final bool isDarkMode = _selectedIndex == 2;
+    final bool isDarkMode = _selectedIndex == 3;
 
   return Scaffold(
       backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white, // Dark background for portfolio
@@ -162,8 +200,8 @@ class _MainNavigationState extends State<MainNavigation> {
         items: <BottomNavigationBarItem>[
           _navItem('Home', 'lib/assets/icons/home_icon.svg', 0, isDarkMode),
           _navItem('Accounts', 'lib/assets/icons/account_icon.svg', 1, isDarkMode),
-          _navItem('Portfolio', 'lib/assets/icons/investment_icon.svg', 2, isDarkMode),
-          _navItem('Profile', 'lib/assets/icons/profile_icon.svg', 3, isDarkMode),
+          // _navItem('Portfolio', 'lib/assets/icons/investment_icon.svg', 2, isDarkMode),
+          _navItem('Profile', 'lib/assets/icons/profile_icon.svg', 2, isDarkMode),
         ],
       ),
     );
