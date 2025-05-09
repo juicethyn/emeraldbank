@@ -1,6 +1,6 @@
 
 
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bills_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bill_screen/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
@@ -430,7 +430,7 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => SendTransferScreen(user: widget.user)));
                           break;
                         case 'bills':
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => BillsPage()));
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => PayBillsPage()));
                           break;
                         // add more actions here...
                         default:

@@ -85,6 +85,28 @@ flutter:
     - lib/assets/icons/settings_icon.svg
     - lib/assets/icons/ticket_icon.svg
 
+  # Biller_Icon Folder
+    - lib/assets/biller_icon/travel.png
+    - lib/assets/biller_icon/club.png
+    - lib/assets/biller_icon/credit_card.png
+    - lib/assets/biller_icon/dealers.png
+    - lib/assets/biller_icon/ewallet.png
+    - lib/assets/biller_icon/foundation.png
+    - lib/assets/biller_icon/franchise.png
+    - lib/assets/biller_icon/government.png
+    - lib/assets/biller_icon/healthcare.png
+    - lib/assets/biller_icon/insurance.png
+    - lib/assets/biller_icon/investment.png
+    - lib/assets/biller_icon/loan.png
+    - lib/assets/biller_icon/logistics.png
+    - lib/assets/biller_icon/media.png
+    - lib/assets/biller_icon/realty.png
+    - lib/assets/biller_icon/rent.png
+    - lib/assets/biller_icon/school.png
+    - lib/assets/biller_icon/telecom.png
+    - lib/assets/biller_icon/utilities.png
+    - lib/assets/biller_icon/others.png
+
   # Shortcuts_Icon Folder
     - lib/assets/shortcuts_icon/send.png
     - lib/assets/shortcuts_icon/topup.png
