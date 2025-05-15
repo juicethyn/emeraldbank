@@ -116,23 +116,25 @@ Future<void> _getCurrentUser() async {
 
   @override
   Widget build(BuildContext context) {
-    // Show a loading indicator until currentUser is available
     if (currentUser == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          title: const Text(
-            'Loading...',
-            style: TextStyle(
-              color: Color(0xFF1A1819),
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+      return PopScope(
+        canPop: false,
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            title: const Text(
+              'Loading...',
+              style: TextStyle(
+                color: Color(0xFF1A1819),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+            automaticallyImplyLeading: false,
           ),
-          automaticallyImplyLeading: false,
+          body: Center(child: CircularProgressIndicator()),  // Loading state
         ),
-        body: Center(child: CircularProgressIndicator()),  // Loading state
       );
     }
 
@@ -151,76 +153,80 @@ Future<void> _getCurrentUser() async {
 
     final bool isDarkMode = _selectedIndex == 3;
 
-  return Scaffold(
-      backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white, // Dark background for portfolio
-      appBar: AppBar(
-        backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
-        elevation: 0,
-        title: Text(
-          'Hello, ${currentUser?.accountNickName ?? "User"}!',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Color(0xFF1A1819),
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: SvgPicture.asset(
-              'lib/assets/icons/update_notification_icon.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? Color(0xFF06D6A0) : Color(0xFF1A1819),
-                BlendMode.srcIn,
-              ),
+    return PopScope(
+      canPop: false, // Prevents back navigation
+      child: Scaffold(
+        backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white, // Dark background for portfolio
+        appBar: AppBar(
+          backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
+          elevation: 0,
+          title: Text(
+            'Hello, ${currentUser?.accountNickName ?? "User"}!',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Color(0xFF1A1819),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
-            onPressed: () {},
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: SvgPicture.asset(
-              'lib/assets/icons/transaction_notification_icon.svg',
-              width: 24,
-              height: 24,
-              colorFilter: ColorFilter.mode(
-                isDarkMode ? Color(0xFF06D6A0) : Color(0xFF1A1819),
-                BlendMode.srcIn,
+          automaticallyImplyLeading: false,
+          actions: [
+            IconButton(
+              icon: SvgPicture.asset(
+                'lib/assets/icons/update_notification_icon.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  isDarkMode ? Color(0xFF06D6A0) : Color(0xFF1A1819),
+                  BlendMode.srcIn,
+                ),
               ),
+              onPressed: () {},
             ),
-            onPressed: () {},
+            const SizedBox(width: 8),
+            IconButton(
+              icon: SvgPicture.asset(
+                'lib/assets/icons/transaction_notification_icon.svg',
+                width: 24,
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  isDarkMode ? Color(0xFF06D6A0) : Color(0xFF1A1819),
+                  BlendMode.srcIn,
+                ),
+              ),
+              onPressed: () {},
+            ),
+            const SizedBox(width: 16),
+          ],
+        ),
+        body: _pages[_selectedIndex],
+        bottomNavigationBar: BottomNavigationBar(
+          backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: Color(0xFF06D6A0),
+          unselectedItemColor: isDarkMode ? Colors.white70 : Color(0xFF1A1819),
+          selectedLabelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDarkMode ? Colors.white : Colors.black,
           ),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: Color(0xFF06D6A0),
-        unselectedItemColor: isDarkMode ? Colors.white70 : Color(0xFF1A1819),
-        selectedLabelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: isDarkMode ? Colors.white : Colors.black,
+          unselectedLabelStyle: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: isDarkMode ? Colors.white70 : Colors.black,
+          ),
+          items: <BottomNavigationBarItem>[
+            _navItem('Home', 'lib/assets/icons/home_icon.svg', 0, isDarkMode),
+            _navItem('Accounts', 'lib/assets/icons/account_icon.svg', 1, isDarkMode),
+            // _navItem('Portfolio', 'lib/assets/icons/investment_icon.svg', 2, isDarkMode),
+            _navItem('Profile', 'lib/assets/icons/profile_icon.svg', 2, isDarkMode),
+          ],
         ),
-        unselectedLabelStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: isDarkMode ? Colors.white70 : Colors.black,
-        ),
-        items: <BottomNavigationBarItem>[
-          _navItem('Home', 'lib/assets/icons/home_icon.svg', 0, isDarkMode),
-          _navItem('Accounts', 'lib/assets/icons/account_icon.svg', 1, isDarkMode),
-          // _navItem('Portfolio', 'lib/assets/icons/investment_icon.svg', 2, isDarkMode),
-          _navItem('Profile', 'lib/assets/icons/profile_icon.svg', 2, isDarkMode),
-        ],
       ),
     );
   }
+
   BottomNavigationBarItem _navItem(String label, String asset, int index, bool isDarkMode) {
     return BottomNavigationBarItem(
       icon: SizedBox(

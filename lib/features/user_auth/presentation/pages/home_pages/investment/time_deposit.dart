@@ -874,6 +874,7 @@ Future<void> _processTimeDeposit({
     'interestPayout': selectedInterestPayout,
     'maturityDate': formattedMaturity,
     'createdAt': FieldValue.serverTimestamp(),
+    'transactionType': 'Time Deposit',
   });
 }
 

@@ -1,3 +1,4 @@
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/main_navigation.dart';
 import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -125,7 +126,11 @@ void _verifyOtp() async {
     }
 
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, "/main");
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => MainNavigation()),
+      (route) => false, // Remove all previous routes
+    );
   } catch (e) {
     debugPrint("OTP verification error: $e");
     ScaffoldMessenger.of(context).showSnackBar(
