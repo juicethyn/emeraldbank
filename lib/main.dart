@@ -4,7 +4,6 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-
 // Main function where the application will run
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,9 +1,8 @@
-
-
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bill_screen/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/investment/choose_investment.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/shortcut_buttons.dart';
 import 'package:emeraldbank_mobileapp/global/common/shortcuts_data.dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
@@ -39,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // Initialize visibleShortcuts based on selectedKeys
-    selectedKeys = ['send','bills','games','more'];
+    selectedKeys = ['send','bills', 'invest','games'];
 
     visibleShortcuts = allShortcuts
         .where((item) => selectedKeys.contains(item['key']))
@@ -260,26 +259,39 @@ class _HomePageState extends State<HomePage> {
                             ),
                             SizedBox(height: 24),
                             Padding(
-                              padding: const EdgeInsets.only(
-                                right: 28.0),
+                              padding: const EdgeInsets.only(right: 28.0),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                  widget.isCardHidden ? "•••• •••• •••• ${user?.accountCardNumber.substring(user.accountCardNumber.length - 4)}" 
-                                  : user?.accountCardNumber != null ? formatAccountNumber(user!.accountCardNumber) : '',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 21,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 2,
-                                  ),
+                                  // Make the card number responsive
+                                  Flexible(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        widget.isCardHidden
+                                            ? (user?.accountCardNumber != null && user!.accountCardNumber.length >= 4
+                                                ? "•••• •••• •••• ${user.accountCardNumber.substring(user.accountCardNumber.length - 4)}"
+                                                : "•••• •••• ••••")
+                                            : user?.accountCardNumber != null
+                                                ? formatAccountNumber(user!.accountCardNumber)
+                                                : '',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 21,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 2,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        softWrap: false,
+                                      ),
+                                    ),
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      widget.isCardHidden? Icons.visibility_off : Icons.visibility, // Eye icon
-                                      size: 24, // You can adjust the size of the icon
-                                      color: Colors.white, // Icon color (same as text color or any color you want)
+                                      widget.isCardHidden ? Icons.visibility_off : Icons.visibility,
+                                      size: 24,
+                                      color: Colors.white,
                                     ),
                                     onPressed: () {
                                       widget.onToggleCardVisibility();
@@ -431,6 +443,9 @@ class _HomePageState extends State<HomePage> {
                           break;
                         case 'bills':
                           Navigator.push(context, MaterialPageRoute(builder: (_) => PayBillsPage()));
+                          break;
+                        case 'invest':
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => InvestmentPage()));
                           break;
                         // add more actions here...
                         default:

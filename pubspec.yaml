@@ -63,6 +63,12 @@ dev_dependencies:
 flutter:
 
   assets:
+    
+    - lib/assets/icons/
+    - lib/assets/biller_icon/
+    - lib/assets/shortcuts_icon/
+    - lib/assets/pictures/
+
   # Assets for the Mobile Application
     - lib/assets/icons/home_icon.svg
     - lib/assets/icons/account_icon.svg

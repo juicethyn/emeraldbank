@@ -1,5 +1,6 @@
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bill_screen/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/investment/choose_investment.dart';
 import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:flutter/material.dart';
 
@@ -18,6 +19,14 @@ final List<Map<String, dynamic>> allShortcuts = [
     'text': 'Bills',
     'onTap': (BuildContext context) {
       Navigator.push(context, MaterialPageRoute(builder: (_) => PayBillsPage()));
+    },
+  },
+  {
+    'key': 'invest',
+    'image': 'lib/assets/pictures/invest_icon.png',
+    'text': 'Invest',
+    'onTap': (BuildContext context) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => InvestmentPage()));
     },
   },
   {

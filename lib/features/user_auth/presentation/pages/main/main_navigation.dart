@@ -43,7 +43,6 @@ Future<void> _getCurrentUser() async {
       final userDocSnapshot = await userDocRef.get();
 
       if (userDocSnapshot.exists) {
-        // Create a UserModel from the `users` collection data
         setState(() {
           currentUser = UserModel.fromFirestore(userDocSnapshot.data()!);
         });
@@ -51,35 +50,51 @@ Future<void> _getCurrentUser() async {
         debugPrint("No user found with the given UID in the `users` collection.");
       }
 
-      // Step 2: Query the `savings` collection where `accountHolder` matches the user's document path
-      final savingsQuerySnapshot = await FirebaseFirestore.instance
-          .collection('savings')
-          .where('accountHolder', isEqualTo: "users/$uid") // Match the user's document path
-          .get();
+      // Step 2: Fetch the user's accountReferences and get the first savings account ID
+      final accountRefsSnapshot = await userDocRef.collection('accountReferences').get();
+      String? firstSavingsId;
+      for (var doc in accountRefsSnapshot.docs) {
+        final List<dynamic>? savingsAccounts = doc.data()['savingsAccounts'];
+        if (savingsAccounts != null && savingsAccounts.isNotEmpty) {
+          // Extract only the document ID if a path is given
+          final id = savingsAccounts.first is String && savingsAccounts.first.contains('/')
+              ? savingsAccounts.first.split('/').last
+              : savingsAccounts.first;
+          firstSavingsId = id;
+          break;
+        }
+      }
 
-      if (savingsQuerySnapshot.docs.isNotEmpty) {
-        // Get the first matching savings document
-        final savingsData = savingsQuerySnapshot.docs.first.data();
+      if (firstSavingsId != null) {
+        // Step 3: Fetch only the first savings account
+        final savingsDoc = await FirebaseFirestore.instance
+            .collection('savings')
+            .doc(firstSavingsId)
+            .get();
 
-        // Update the UserModel with data from the `savings` collection while preserving `accountNickName`
-        setState(() {
-          currentUser = UserModel(
-            email: currentUser?.email ?? '',
-            phoneNumber: currentUser?.phoneNumber ?? '',
-            balance: savingsData['currentBalance']?.toDouble() ?? 0.0,
-            accountNickName: currentUser?.accountNickName ?? '', // Preserve accountNickName
-            accountName: savingsData['accountHolderName'] ?? '',
-            accountNumber: savingsData['savingsAccountInformation']['accountNumber'] ?? '',
-            accountCardNumber: savingsData['savingsAccountInformation']['cardNumber'] ?? '',
-            accountCVC: savingsData['savingsAccountInformation']['cvv_cvc'] ?? '',
-            birthDate: currentUser?.birthDate ?? '', // Preserve birthDate
-            issuedOn: savingsData['issuedDate'] ?? '',
-            expiresEnd: savingsData['expiryDate'] ?? '',
-            uid: uid,
-          );
-        });
+        if (savingsDoc.exists) {
+          final savingsData = savingsDoc.data()!;
+          setState(() {
+            currentUser = UserModel(
+              email: currentUser?.email ?? '',
+              phoneNumber: currentUser?.phoneNumber ?? '',
+              balance: savingsData['currentBalance']?.toDouble() ?? 0.0,
+              accountNickName: currentUser?.accountNickName ?? '',
+              accountName: savingsData['accountHolderName'] ?? '',
+              accountNumber: savingsData['savingsAccountInformation']['accountNumber'] ?? '',
+              accountCardNumber: savingsData['savingsAccountInformation']['cardNumber'] ?? '',
+              accountCVC: savingsData['savingsAccountInformation']['cvv_cvc'] ?? '',
+              birthDate: currentUser?.birthDate ?? '',
+              issuedOn: savingsData['issuedDate'] ?? '',
+              expiresEnd: savingsData['expiryDate'] ?? '',
+              uid: uid,
+            );
+          });
+        } else {
+          debugPrint("No savings account found for the first ID in the user's savingsAccounts array.");
+        }
       } else {
-        debugPrint("No savings account found for the user in the `savings` collection.");
+        debugPrint("No savingsAccounts found in the user's accountReferences.");
       }
     } catch (e) {
       debugPrint("Error fetching user data: $e");
