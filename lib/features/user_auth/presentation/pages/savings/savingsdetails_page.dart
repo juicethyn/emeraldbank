@@ -9,6 +9,7 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/ac
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/transaction_overview.dart';
 import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
 
 class SavingsDetailsPage extends StatefulWidget {
   final String savingsId;
@@ -196,43 +197,71 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> _fetchAllRelevantTransactions(
-    String accountId,
-  ) async {
+  Stream<List<Map<String, dynamic>>> _getTransactionsStream(String accountId) {
     final accountRef = FirebaseFirestore.instance.doc('savings/$accountId');
 
-    final sourceQuery =
-        await FirebaseFirestore.instance
+    // Create individual streams but don't process them yet
+    final sourceStream =
+        FirebaseFirestore.instance
             .collection('transactions')
             .where('source.sourceRef', isEqualTo: accountRef)
             .orderBy('transactionDate', descending: true)
             .limit(4)
-            .get();
+            .snapshots();
 
-    final destQuery =
-        await FirebaseFirestore.instance
+    final destStream =
+        FirebaseFirestore.instance
             .collection('transactions')
             .where('destination.destinationRef', isEqualTo: accountRef)
             .orderBy('transactionDate', descending: true)
             .limit(4)
-            .get();
+            .snapshots();
 
-    // Convert both to lists
-    final sourceTransactions =
-        sourceQuery.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+    // Combine the snapshots, then process them together
+    return Rx.combineLatest2(sourceStream, destStream, (
+      QuerySnapshot sourceSnapshot,
+      QuerySnapshot destSnapshot,
+    ) {
+      print(
+        'DEBUG: Got ${sourceSnapshot.docs.length} source transactions and ${destSnapshot.docs.length} dest transactions',
+      );
 
-    final destTransactions =
-        destQuery.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
+      // Process source transactions
+      final sourceTxs =
+          sourceSnapshot.docs
+              .map(
+                (doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>},
+              )
+              .toList();
 
-    // Combine, sort, and take first 4
-    final allTransactions = [...sourceTransactions, ...destTransactions];
-    allTransactions.sort((a, b) {
-      final aDate = (a['transactionDate'] as Timestamp).toDate();
-      final bDate = (b['transactionDate'] as Timestamp).toDate();
-      return bDate.compareTo(aDate);
+      // Process destination transactions
+      final destTxs =
+          destSnapshot.docs
+              .map(
+                (doc) => {'id': doc.id, ...doc.data() as Map<String, dynamic>},
+              )
+              .toList();
+
+      // Combine both lists
+      final allTransactions = [...sourceTxs, ...destTxs];
+
+      // Sort by date (newest first)
+      allTransactions.sort((a, b) {
+        final aDate = (a['transactionDate'] as Timestamp).toDate();
+        final bDate = (b['transactionDate'] as Timestamp).toDate();
+        return bDate.compareTo(aDate);
+      });
+
+      // Remove duplicates based on transaction id
+      final uniqueTransactions = <String, Map<String, dynamic>>{};
+      for (final tx in allTransactions) {
+        uniqueTransactions[tx['id']] = tx;
+      }
+
+      final result = uniqueTransactions.values.take(4).toList();
+      print('DEBUG: Returning ${result.length} combined transactions');
+      return result;
     });
-
-    return allTransactions.take(4).toList();
   }
 
   @override
@@ -386,14 +415,13 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
 
                         const SizedBox(height: 24),
 
-                        // Transaction
-                        FutureBuilder<List<Map<String, dynamic>>>(
-                          future: _fetchAllRelevantTransactions(
-                            widget.savingsId,
-                          ),
+                        StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: _getTransactionsStream(widget.savingsId),
                           builder: (context, snapshot) {
+                            // Changed condition to show loading only when actively waiting
                             if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
+                                    ConnectionState.waiting &&
+                                snapshot.data == null) {
                               return const TransactionOverview(
                                 transactions: [],
                                 isLoading: true,
