@@ -5,21 +5,20 @@ import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/acc
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_balance_overview.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_details_section.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_transaction_button_section.dart';
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_virtualCard.dart';
-import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/transaction_overview.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_virtualcard.dart';
 import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
 
-class SavingsDetailsPage extends StatefulWidget {
-  final String savingsId;
+class CreditCardDetailsPage extends StatefulWidget {
+  final String creditCardId;
 
-  const SavingsDetailsPage({super.key, required this.savingsId});
+  const CreditCardDetailsPage({super.key, required this.creditCardId});
 
   @override
-  State<SavingsDetailsPage> createState() => _SavingsDetailsPageState();
+  State<CreditCardDetailsPage> createState() => _CreditCardDetailsPage();
 }
 
-class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
+class _CreditCardDetailsPage extends State<CreditCardDetailsPage> {
   bool _isLoading = true;
   bool _isHidden = false;
   bool _isBalanceHidden = false;
@@ -31,13 +30,13 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _setupFirestoreListener();
+    _setupFireStoreListener();
   }
 
-  void _setupFirestoreListener() {
+  void _setupFireStoreListener() {
     _accountSubscription = FirebaseFirestore.instance
-        .collection('savings')
-        .doc(widget.savingsId)
+        .collection('creditCard')
+        .doc(widget.creditCardId)
         .snapshots()
         .listen(
           (docSnapshot) {
@@ -73,7 +72,7 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
     try {
       final accountHolderName = await _fetchAccountHolderName();
       final bankInfo = await _fetchBankName();
-      final accountInfo = await _fetchAccountTypeAndInterest();
+      final accountInfo = await _fetchAccountTypeDetails();
 
       setState(() {
         _referenceData = {
@@ -82,6 +81,7 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
           'shortName': bankInfo['shortName'],
           'accountType': accountInfo['accountType'],
           'interestRate': accountInfo['interestRate'],
+          'cutOffDate': accountInfo['cutOffDate'],
         };
         _isReferencesLoading = false;
       });
@@ -94,12 +94,12 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
           'bankName': 'Bank Name',
           'accountType': 'Account Type',
           'interestRate': '0.0',
+          'cutOffDate': 'CutOffDate',
         };
       });
     }
   }
 
-  // Fetch account Holder name
   Future<String> _fetchAccountHolderName() async {
     try {
       final accountHolderRef = _accountData['accountHolder'];
@@ -122,7 +122,6 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
             userData?['accountNickname'] ??
             'Account Holder';
       }
-
       return 'Account Holder';
     } catch (e) {
       print('Error fetching account holder name: $e');
@@ -130,15 +129,14 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
     }
   }
 
-  // Fetch bank name and short name
   Future<Map<String, dynamic>> _fetchBankName() async {
     try {
-      final bankRef =
-          _accountData['savingsAccountInformation']?['associatedBank'];
+      final bankRef = _accountData['creditCardInformation']?['associatedBank'];
+
       if (bankRef == null) {
         return {
-          'bankName': 'Unkown Bankname',
-          'shortName': 'Unkown Short Bankname',
+          'bankName': 'Unknown Bankname',
+          'shortName': 'Unknown Short Bankname',
         };
       }
 
@@ -149,30 +147,35 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
 
           return {
             'bankName': bankData?['bank_name'] ?? 'Unknown Bankname',
-            'shortName': bankData?['short_name']?.toString() ?? '0.0',
+            'shortName':
+                bankData?['short_name']?.toString() ?? 'Unknown ShortName',
           };
         }
       }
       return {
-        'bankName': 'Unkown Bankname',
-        'shortName': 'Unkown Short Bankname',
+        'bankName': 'Unknown Bankname',
+        'shortName': 'Unknown Short Bankname',
       };
     } catch (e) {
       print('Error fetching bank name: $e');
       return {
-        'bankName': 'Unkown Bankname',
-        'shortName': 'Unkown Short Bankname',
+        'bankName': 'Unknown Bankname',
+        'shortName': 'Unknown Short Bankname',
       };
     }
   }
 
-  // Fetch Account Type and InterestRate
-  Future<Map<String, dynamic>> _fetchAccountTypeAndInterest() async {
+  Future<Map<String, dynamic>> _fetchAccountTypeDetails() async {
     try {
       final accountTypeRef =
-          _accountData['savingsAccountInformation']?['accountType'];
+          _accountData['creditCardInformation']?['accountType'];
+
       if (accountTypeRef == null) {
-        return {'accountType': 'Unknown Account Type', 'interestRate': '0.0'};
+        return {
+          'accountType': 'Unknown Account Type',
+          'interestRate': '0.0',
+          'cutOffDate': 'Unknown Cutoff',
+        };
       }
 
       if (accountTypeRef is DocumentReference) {
@@ -181,90 +184,63 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
           final accountTypeData =
               accountTypeDoc.data() as Map<String, dynamic>?;
 
-          // Get both values from the same document
           return {
             'accountType': accountTypeData?['name'] ?? 'Unknown Type',
             'interestRate':
                 accountTypeData?['interestRate']?.toString() ?? '0.0',
+            'cutOffDate': accountTypeData?['cutOffDate'] ?? 'Unknown Cutoff',
           };
         }
       }
-      return {'accountType': 'Unknown Account Type', 'interestRate': '0.0'};
+      return {
+        'accountType': 'Unknown Account Type',
+        'interestRate': '0.0',
+        'cutOffDate': 'Unknown Cutoff',
+      };
     } catch (e) {
       print('Error fetching account type data: $e');
-      return {'accountType': 'Unknown Account Type', 'interestRate': '0.0'};
+      return {
+        'accountType': 'Unknown Account Type',
+        'interestRate': '0.0',
+        'cutOffDate': 'Unknown Cutoff',
+      };
     }
-  }
-
-  Future<List<Map<String, dynamic>>> _fetchAllRelevantTransactions(
-    String accountId,
-  ) async {
-    final accountRef = FirebaseFirestore.instance.doc('savings/$accountId');
-
-    final sourceQuery =
-        await FirebaseFirestore.instance
-            .collection('transactions')
-            .where('source.sourceRef', isEqualTo: accountRef)
-            .orderBy('transactionDate', descending: true)
-            .limit(4)
-            .get();
-
-    final destQuery =
-        await FirebaseFirestore.instance
-            .collection('transactions')
-            .where('destination.destinationRef', isEqualTo: accountRef)
-            .orderBy('transactionDate', descending: true)
-            .limit(4)
-            .get();
-
-    // Convert both to lists
-    final sourceTransactions =
-        sourceQuery.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-
-    final destTransactions =
-        destQuery.docs.map((doc) => {'id': doc.id, ...doc.data()}).toList();
-
-    // Combine, sort, and take first 4
-    final allTransactions = [...sourceTransactions, ...destTransactions];
-    allTransactions.sort((a, b) {
-      final aDate = (a['transactionDate'] as Timestamp).toDate();
-      final bDate = (b['transactionDate'] as Timestamp).toDate();
-      return bDate.compareTo(aDate);
-    });
-
-    return allTransactions.take(4).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    // Extract account data fields that we already have
-    final accountHoldername =
+    final accountHolderName =
         _referenceData?['accountHolderName'] ?? 'Account Holder';
     final associatedHolderFullName =
-        _referenceData?['bankName'] ?? 'Unknown Bankname';
+        _referenceData?['bankName'] ?? 'Unknown BankName';
     final associatedHolderShortName =
         _referenceData?['shortName'] ?? 'Unknown Short Bankname';
     final interestRate = formatInterestRateDisplay(
       _referenceData?['interestRate'],
     );
     final accountType = _referenceData?['accountType'] ?? 'Account Type';
+    final cutOffDate = _referenceData?['cutOffDate'] ?? 'CutOffDate';
     final accountNumber =
-        _accountData['savingsAccountInformation']?['accountNumber'];
-    final cardNumber = _accountData['savingsAccountInformation']?['cardNumber'];
+        _accountData['creditCardInformation']?['accountNumber'];
+    final cardNumber =
+        _accountData['creditCardInformation']?['creditCardNumber'];
     final expiryDate = _accountData['expiryDate'];
-    final remainingBalance = toDouble(_accountData['currentBalance']);
-    final monthlyWithdrawals = toDouble(
-      _accountData['monthlyActivity']?['monthlyWithdrawals'],
-    );
-    final monthlyDeposit = toDouble(
-      _accountData['monthlyActivity']?['monthlyDeposit'],
-    );
+    final remainingCredit = toDouble(_accountData['remainingCredit']);
+    final creditLimit = toDouble(_accountData['creditLimit']);
     final createdAtTimestamp =
         _accountData['createdAt'] != null
             ? formatDateMMDDYYYY(
               (_accountData['createdAt'] as Timestamp).toDate(),
             )
             : 'N/A';
+
+    final billingDueDate = formatDateToWords(
+      _accountData['currentBilling']?['billingDueDate'],
+    );
+    final minimumPaymentDue = toDouble(
+      _accountData['currentBilling']?['minimumDue'],
+    );
+    final annualFee = toDouble(_accountData['currentBilling']?['AnnualFee']);
 
     return Scaffold(
       appBar: AccountDetailsAppbar(title: 'Account Details'),
@@ -274,7 +250,7 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                 child: CircularProgressIndicator(color: Color(0xFF06D6A0)),
               )
               : RefreshIndicator(
-                color: const Color(0xFF06D6A0),
+                color: Color(0xFF06D6A0),
                 onRefresh: () async {
                   setState(() {
                     _isReferencesLoading = true;
@@ -292,10 +268,10 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                         Center(
                           child: VirtualCardWidget(
                             accountNumber: accountNumber,
+                            accountHolderName: accountHolderName,
                             cardNumber: cardNumber,
-                            accountHolderName: accountHoldername,
-                            associatedHolderName: associatedHolderShortName,
                             accountType: accountType,
+                            associatedHolderName: associatedHolderShortName,
                             expiryDate: expiryDate,
                             isHidden: _isHidden,
                             onVisibilityToggle: () {
@@ -308,12 +284,11 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
 
                         const SizedBox(height: 24),
 
-                        // Account Balance Overview
                         Center(
                           child: AccountBalanceOverview(
-                            balance: remainingBalance,
-                            interestRate: interestRate,
-                            balanceTitle: 'Balance',
+                            balance: remainingCredit,
+                            maxBalance: creditLimit,
+                            balanceTitle: 'Remaining Credit',
                             isHidden: _isBalanceHidden,
                             onVisibilityToggle: () {
                               setState(() {
@@ -325,24 +300,36 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
 
                         const SizedBox(height: 24),
 
-                        // Transaction Buttons
                         TransactionButtonRow(
                           buttons: [
+                            AccountTransactionButtonSection(
+                              label: 'Lock Card',
+                              iconPath: 'lib/assets/icons/logo_small_icon.svg',
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Lock Card')),
+                                );
+                              },
+                            ),
                             AccountTransactionButtonSection(
                               label: 'Pay Bills',
                               iconPath: 'lib/assets/icons/logo_small_icon.svg',
                               onTap: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Paybills')),
+                                  SnackBar(
+                                    content: Text(
+                                      'Pay Bills Using Credit Card',
+                                    ),
+                                  ),
                                 );
                               },
                             ),
                             AccountTransactionButtonSection(
-                              label: 'Transfer',
+                              label: 'Pay Credit Bill',
                               iconPath: 'lib/assets/icons/logo_small_icon.svg',
                               onTap: () {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Transfer')),
+                                  SnackBar(content: Text('Pay Credit Bills')),
                                 );
                               },
                             ),
@@ -355,9 +342,7 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                         AccountDetailsSection(
                           sectionTitle: 'Details',
                           details: {
-                            'Account Holder':
-                                _referenceData!['accountHolderName'] ??
-                                'Account Holder',
+                            'Account Holder': accountHolderName,
                             'Account Number': formatAccountNumber(
                               accountNumber,
                             ),
@@ -365,6 +350,8 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                             'Account Type': accountType,
                             'Interest': interestRate,
                             'Bank': associatedHolderFullName,
+                            'Cut-off Date': cutOffDate,
+                            'Billing Due Date': billingDueDate,
                           },
                         ),
 
@@ -373,56 +360,16 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                         AccountDetailsSection(
                           sectionTitle: 'Other Details',
                           details: {
-                            'Total Monthly Deposit': formatCurrency(
-                              monthlyDeposit,
+                            'Minimum Payment Due': formatCurrency(
+                              minimumPaymentDue,
                             ),
-                            'Total Monthly Withdrawals': formatCurrency(
-                              monthlyWithdrawals,
-                            ),
+                            'Annual Fee': formatCurrency(annualFee),
                             'Account Opening Date': createdAtTimestamp,
                           },
                           eneableToggle: false,
                         ),
 
-                        const SizedBox(height: 24),
-
-                        // Transaction
-                        FutureBuilder<List<Map<String, dynamic>>>(
-                          future: _fetchAllRelevantTransactions(
-                            widget.savingsId,
-                          ),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const TransactionOverview(
-                                transactions: [],
-                                isLoading: true,
-                              );
-                            }
-
-                            if (snapshot.hasError) {
-                              return Text(
-                                'Error loading transactions: ${snapshot.error}',
-                              );
-                            }
-
-                            final transactions = snapshot.data ?? [];
-                            return TransactionOverview(
-                              transactions: transactions,
-                              isLoading: false,
-                              accountId: widget.savingsId,
-                              onViewAllPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('All Transactions'),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 50),
                       ],
                     ),
                   ),

@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class AccountBalanceOverview extends StatelessWidget {
   final double balance;
+  final double? maxBalance;
   final String? interestRate;
   final String balanceTitle;
   final bool isHidden;
@@ -13,6 +14,7 @@ class AccountBalanceOverview extends StatelessWidget {
   const AccountBalanceOverview({
     super.key,
     required this.balance,
+    this.maxBalance,
     required this.balanceTitle,
     required this.isHidden,
     this.interestRate,
@@ -54,17 +56,37 @@ class AccountBalanceOverview extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Balance with optional interest indicator
+              // Balance with optional max balance
               Row(
                 children: [
-                  Text(
-                    isHidden ? '₱ ××××.××' : formatCurrency(balance),
-                    style: TextStyle(
-                      fontFamily: 'Montserrat',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 20,
-                      color: Colors.black,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        isHidden ? '₱ ××××.××' : formatCurrency(balance),
+                        style: const TextStyle(
+                          fontFamily: 'Montserrat',
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20,
+                          color: Colors.black,
+                        ),
+                      ),
+
+                      // Show max balance if provided
+                      if (maxBalance != null) ...[
+                        const SizedBox(width: 4),
+                        Text(
+                          isHidden
+                              ? '/ ₱ ××××.××'
+                              : '/ ${formatCurrency(maxBalance!).trim()}',
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: Colors.black.withAlpha(102),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
 
                   if (interestRate != null) ...[
@@ -84,7 +106,7 @@ class AccountBalanceOverview extends StatelessWidget {
                             'lib/assets/icons/chart_line.svg',
                             width: 12,
                             height: 12,
-                            colorFilter: ColorFilter.mode(
+                            colorFilter: const ColorFilter.mode(
                               Color(0xFF044E42),
                               BlendMode.srcIn,
                             ),
@@ -92,7 +114,7 @@ class AccountBalanceOverview extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             interestRate!,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontFamily: 'Montserrat',
                               fontWeight: FontWeight.w600,
                               fontSize: 12,

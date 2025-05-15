@@ -96,3 +96,33 @@ String formatInterestRateDisplay(dynamic rate, {int decimalPlaces = 2}) {
   final percentage = formatInterestRateValue(rate);
   return '${percentage.toStringAsFixed(decimalPlaces)}%';
 }
+
+String formatDateToWords(String? dateString) {
+  if (dateString == null || dateString.isEmpty) {
+    return 'No date available';
+  }
+
+  try {
+    // Parse MM/DD/YYYY format
+    final parts = dateString.split('/');
+    if (parts.length != 3) {
+      return dateString; // Return original if format doesn't match
+    }
+
+    final month = int.tryParse(parts[0]);
+    final day = int.tryParse(parts[1]);
+    final year = int.tryParse(parts[2]);
+
+    if (month == null || day == null || year == null) {
+      return dateString; // Return original if parsing fails
+    }
+
+    final date = DateTime(year, month, day);
+
+    // Format to Month Day, Year format
+    return DateFormat('MMMM d, yyyy').format(date);
+  } catch (e) {
+    print('Error formatting date: $e');
+    return dateString; // Return original on error
+  }
+}
