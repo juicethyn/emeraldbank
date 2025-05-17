@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class TransactionOverview extends StatelessWidget {
   final List<Map<String, dynamic>> transactions;
@@ -110,7 +109,7 @@ class TransactionOverview extends StatelessWidget {
     final totalAmount = amount + fee;
 
     final transactionDate = transaction['transactionDate'] as Timestamp?;
-    final dateString = _formatTransactionDate(transactionDate);
+    final dateString = formatTransactionDate(transactionDate);
 
     // Get source and destination as strings for reliable comparison
     final sourceRef = transaction['source']?['sourceRef'];
@@ -137,14 +136,29 @@ class TransactionOverview extends StatelessWidget {
     print('DEBUG: Is outgoing: $isOutgoing, Is incoming: $isIncoming');
 
     // Apply correct prefix and color
-    final amountPrefix = isOutgoing ? '- ' : '+ ';
-    final amountColor =
-        isOutgoing
-            ? const Color(0xFFEB5757) // Red for outgoing
-            : const Color(0xFF06D6A0); // Green for incoming
+    String amountPrefix;
+    Color amountColor;
 
-    final partnerName = _getTransactionPartnerName(transaction, isOutgoing);
-    final iconData = _getTransactionIcon(transaction['transactionType']);
+    if (isOutgoing && !isIncoming) {
+      // Money leaving this account
+      amountPrefix = '- ';
+      amountColor = const Color(0xFFEB5757);
+    } else if (!isOutgoing && isIncoming) {
+      // Money coming into this account
+      amountPrefix = '+ ';
+      amountColor = const Color(0xFF06D6A0);
+    } else if (isOutgoing && isIncoming) {
+      // Internal transfer between own accounts
+      amountPrefix = '~ ';
+      amountColor = Colors.orange;
+    } else {
+      // Neither source nor destination matches account (shouldn't happen)
+      amountPrefix = '';
+      amountColor = Colors.grey;
+    }
+
+    final partnerName = getTransactionPartnerName(transaction, isOutgoing);
+    final iconData = getTransactionIcon(transaction['transactionType']);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -210,72 +224,6 @@ class TransactionOverview extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatTransactionDate(Timestamp? timestamp) {
-    if (timestamp == null) return 'Unknown date';
-
-    final now = DateTime.now();
-    final transactionDate = timestamp.toDate();
-    final difference = now.difference(transactionDate);
-
-    if (difference.inDays == 0) {
-      // Today
-      return 'Today, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
-    } else if (difference.inDays == 1) {
-      // Yesterday
-      return 'Yesterday, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
-    } else if (difference.inDays < 7) {
-      // Within last week
-      return '${DateFormat('EEEE').format(transactionDate)}, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
-    } else {
-      // Older
-      return '${DateFormat('MM/dd/yyyy').format(transactionDate)}, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
-    }
-  }
-
-  String _getTransactionPartnerName(
-    Map<String, dynamic> transaction,
-    bool isOutgoing,
-  ) {
-    // In a real app, you would fetch the actual name of the transaction partner
-    // This is a simplified implementation
-
-    if (isOutgoing) {
-      // For outgoing, use destination
-      if (transaction['transactionType'] == 'Fund Transfer') {
-        return 'Transfer to Account';
-      } else if (transaction['transactionType'] == 'Bill Payment') {
-        return 'Bill Payment';
-      }
-    } else {
-      // For incoming
-      if (transaction['transactionType'] == 'Fund Transfer') {
-        return 'Transfer from Account';
-      } else if (transaction['transactionType'] == 'Deposit') {
-        return 'Deposit';
-      }
-    }
-
-    // Default fallback
-    return transaction['transactionType'] ?? 'Transaction';
-  }
-
-  IconData _getTransactionIcon(String? transactionType) {
-    switch (transactionType) {
-      case 'Fund Transfer':
-        return Icons.swap_horiz;
-      case 'Bill Payment':
-        return Icons.receipt_long;
-      case 'Withdrawal':
-        return Icons.money_off;
-      case 'Deposit':
-        return Icons.savings;
-      case 'Payment':
-        return Icons.payment;
-      default:
-        return Icons.account_balance_wallet;
-    }
   }
 
   String _getCurrentAccountPath() {

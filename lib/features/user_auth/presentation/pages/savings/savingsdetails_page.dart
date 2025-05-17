@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/transactionPage/transactionhistory_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountdetails_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_balance_overview.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_details_section.dart';
@@ -440,11 +441,20 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                               isLoading: false,
                               accountId: widget.savingsId,
                               onViewAllPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('All Transactions'),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => TransactionHistoryPage(
+                                          accountId: widget.savingsId,
+                                        ),
                                   ),
                                 );
+                                // ScaffoldMessenger.of(context).showSnackBar(
+                                //   const SnackBar(
+                                //     content: Text('All Transactions'),
+                                //   ),
+                                // );
                               },
                             );
                           },

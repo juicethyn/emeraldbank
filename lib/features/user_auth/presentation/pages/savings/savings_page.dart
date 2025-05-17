@@ -91,10 +91,12 @@ class _SavingsPageState extends State<SavingsPage> {
       // Format Transaction Date
       final txData = mostRecent.data() as Map<String, dynamic>;
       final amount = txData['amount'] as num;
+      final fee = txData['fee'] as num;
       final date = txData['transactionDate'] as Timestamp;
 
       return {
         'amount': amount.toDouble(),
+        'fee': fee,
         'date': date,
         'formattedDate': formatDateMMDDYYYY(date.toDate()),
         'type': txData['transactionType'] ?? 'TRANSACTION',
@@ -219,7 +221,7 @@ class _SavingsPageState extends State<SavingsPage> {
         final lastTransaction = await _getLastTransaction(savingsDoc.id);
         final lastTransactionText =
             lastTransaction != null
-                ? '${lastTransaction['formattedDate']} (${lastTransaction['isIncoming'] ? '+' : '-'} ${formatCurrency(lastTransaction['amount'])})'
+                ? '${lastTransaction['formattedDate']} (${lastTransaction['isIncoming'] ? '+' : '-'} ${formatCurrency(lastTransaction['amount'] + lastTransaction['fee'])})'
                 : 'No transaction history';
 
         cards.add({

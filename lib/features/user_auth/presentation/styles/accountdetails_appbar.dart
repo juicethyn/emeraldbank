@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 class AccountDetailsAppbar extends StatelessWidget
     implements PreferredSizeWidget {
   final String title;
+  final List<Widget>? actions;
 
-  const AccountDetailsAppbar({super.key, required this.title});
+  const AccountDetailsAppbar({super.key, required this.title, this.actions});
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +41,8 @@ class AccountDetailsAppbar extends StatelessWidget
             onPressed: () => Navigator.of(context).pop(),
           ),
         ),
+
+        actions: actions,
       ),
     );
   }

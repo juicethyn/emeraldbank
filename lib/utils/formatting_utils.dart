@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 String formatCurrency(double value) {
@@ -125,4 +127,70 @@ String formatDateToWords(String? dateString) {
     print('Error formatting date: $e');
     return dateString; // Return original on error
   }
+}
+
+String formatTransactionDate(Timestamp? timestamp) {
+  if (timestamp == null) return 'Unknown date';
+
+  final now = DateTime.now();
+  final transactionDate = timestamp.toDate();
+  final difference = now.difference(transactionDate);
+
+  if (difference.inDays == 0) {
+    // Today
+    return 'Today, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
+  } else if (difference.inDays == 1) {
+    // Yesterday
+    return 'Yesterday, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
+  } else if (difference.inDays < 7) {
+    // Within last week
+    return '${DateFormat('EEEE').format(transactionDate)}, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
+  } else {
+    // Older
+    return '${DateFormat('MM/dd/yyyy').format(transactionDate)}, at ${DateFormat('h:mma').format(transactionDate).toLowerCase()}';
+  }
+}
+
+IconData getTransactionIcon(String? transactionType) {
+  switch (transactionType) {
+    case 'Fund Transfer':
+      return Icons.swap_horiz;
+    case 'Bill Payment':
+      return Icons.receipt_long;
+    case 'Withdrawal':
+      return Icons.money_off;
+    case 'Deposit':
+      return Icons.savings;
+    case 'Payment':
+      return Icons.payment;
+    default:
+      return Icons.account_balance_wallet;
+  }
+}
+
+String getTransactionPartnerName(
+  Map<String, dynamic> transaction,
+  bool isOutgoing,
+) {
+  // In a real app, you would fetch the actual name of the transaction partner
+  // This is a simplified implementation
+
+  if (isOutgoing) {
+    // For outgoing, use destination
+    if (transaction['transactionType'] == 'Fund Transfer') {
+      return 'Transfer to Account';
+    } else if (transaction['transactionType'] == 'Bill Payment') {
+      return 'Bill Payment';
+    }
+  } else {
+    // For incoming
+    if (transaction['transactionType'] == 'Fund Transfer') {
+      return 'Transfer from Account';
+    } else if (transaction['transactionType'] == 'Deposit') {
+      return 'Deposit';
+    }
+  }
+
+  // Default fallback
+  return transaction['transactionType'] ?? 'Transaction';
 }
