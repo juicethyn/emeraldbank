@@ -1,4 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/transactionPage/transaction_details.dart';
+import 'package:emeraldbank_mobileapp/utils/filter_test.dart';
+import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountdetails_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/transaction_card.dart';
@@ -15,6 +18,73 @@ class TransactionHistoryPage extends StatefulWidget {
 }
 
 class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
+  TransactionFilters _currentFilters = TransactionFilters();
+  // Helper method to apply filters to transactions
+  List<Map<String, dynamic>> _applyFilters(
+    List<Map<String, dynamic>> transactions,
+  ) {
+    return transactions.where((tx) {
+      // Apply date filter
+      if (_currentFilters.dateRange != DateRange.allTime) {
+        final txDate = (tx['transactionDate'] as Timestamp).toDate();
+        final now = DateTime.now();
+        final cutoffDate =
+            _currentFilters.dateRange == DateRange.last7Days
+                ? now.subtract(Duration(days: 7))
+                : _currentFilters.dateRange == DateRange.last30Days
+                ? now.subtract(Duration(days: 30))
+                : now.subtract(Duration(days: 90)); // last3Months
+
+        if (txDate.isBefore(cutoffDate)) {
+          return false;
+        }
+      }
+
+      // Apply direction filter
+      if (_currentFilters.direction != TransactionDirection.all) {
+        final accountRef = FirebaseFirestore.instance.doc(
+          'savings/${widget.accountId}',
+        );
+        final sourceRef = tx['source']?['sourceRef'];
+        final sourceRefPath =
+            sourceRef is DocumentReference
+                ? sourceRef.path
+                : sourceRef.toString();
+
+        // Compare with accountRef.path instead of widget.accountId
+        final isOutgoing = sourceRefPath.contains(accountRef.path);
+
+        if (_currentFilters.direction == TransactionDirection.incoming &&
+            isOutgoing) {
+          return false;
+        }
+        if (_currentFilters.direction == TransactionDirection.outgoing &&
+            !isOutgoing) {
+          return false;
+        }
+      }
+
+      // Apply type filter
+      if (_currentFilters.type != null &&
+          tx['transactionType'] != _currentFilters.type) {
+        return false;
+      }
+
+      // Apply amount filters
+      final amount = toDouble(tx['amount']) + toDouble(tx['fee'] ?? 0);
+      if (_currentFilters.minAmount != null &&
+          amount < _currentFilters.minAmount!) {
+        return false;
+      }
+      if (_currentFilters.maxAmount != null &&
+          amount > _currentFilters.maxAmount!) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
   Stream<List<Map<String, dynamic>>> _getTransactionsStream(String accountId) {
     final accountRef = FirebaseFirestore.instance.doc('savings/$accountId');
 
@@ -108,7 +178,15 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                       top: Radius.circular(20),
                     ),
                   ),
-                  builder: (context) => const FilterBottomSheet(),
+                  builder:
+                      (context) => FilterBottomSheet(
+                        initialFilters: _currentFilters,
+                        onlyApplyFilters: (filters) {
+                          setState(() {
+                            _currentFilters = filters;
+                          });
+                        },
+                      ),
                 );
               },
             ),
@@ -138,7 +216,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             );
           }
 
-          final transactions = snapshot.data ?? [];
+          final transactions = _applyFilters(snapshot.data ?? []);
 
           if (transactions.isEmpty) {
             return const Center(
@@ -162,27 +240,39 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                 transaction: transactions[index],
                 accountId: widget.accountId,
                 onTap: (transaction) {
-                  // Show a SnackBar with transaction ID
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Transaction ID: ${transaction['id']}'),
-                      duration: const Duration(seconds: 2),
-                      action: SnackBarAction(
-                        label: 'View Details',
-                        onPressed: () {
-                          // In future, navigate to details page
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => TransactionDetailsPage(
-                          //       transactionId: transaction['id'],
-                          //     ),
-                          //   ),
-                          // );
-                        },
-                      ),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (context) => TransactionDetails(
+                            transactionId: transaction['id'],
+                            transactionData:
+                                transaction, // Pass data to avoid another fetch
+                          ),
                     ),
                   );
+
+                  //   // Show a SnackBar with transaction ID
+                  //   ScaffoldMessenger.of(context).showSnackBar(
+                  //     SnackBar(
+                  //       content: Text('Transaction ID: ${transaction['id']}'),
+                  //       duration: const Duration(seconds: 2),
+                  //       action: SnackBarAction(
+                  //         label: 'View Details',
+                  //         onPressed: () {
+                  //           // In future, navigate to details page
+                  //           // Navigator.push(
+                  //           //   context,
+                  //           //   MaterialPageRoute(
+                  //           //     builder: (context) => TransactionDetailsPage(
+                  //           //       transactionId: transaction['id'],
+                  //           //     ),
+                  //           //   ),
+                  //           // );
+                  //         },
+                  //       ),
+                  //     ),
+                  //   );
                 },
               );
             },
@@ -194,14 +284,34 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 }
 
 // Simple implementation of FilterBottomSheet
-class FilterBottomSheet extends StatelessWidget {
-  const FilterBottomSheet({Key? key}) : super(key: key);
+class FilterBottomSheet extends StatefulWidget {
+  final Function(TransactionFilters) onlyApplyFilters;
+  final TransactionFilters initialFilters;
+
+  const FilterBottomSheet({
+    super.key,
+    required this.onlyApplyFilters,
+    required this.initialFilters,
+  });
+
+  @override
+  State<FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends State<FilterBottomSheet> {
+  late TransactionFilters _filters;
+
+  @override
+  void initState() {
+    super.initState();
+    _filters = widget.initialFilters;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
-      height: 300,
+      height: 500, // Taller to fit all filters
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -215,31 +325,179 @@ class FilterBottomSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // Filter options will go here
-          const Text('Filter options coming soon...'),
+
+          // Date Range Filter
+          Text('Date Range', style: TextStyle(fontWeight: FontWeight.w600)),
+          Wrap(
+            spacing: 8,
+            children: [
+              _filterChip(
+                'Last 7 days',
+                _filters.dateRange == DateRange.last7Days,
+                () => setState(
+                  () =>
+                      _filters = _filters.copyWith(
+                        dateRange: DateRange.last7Days,
+                      ),
+                ),
+              ),
+              _filterChip(
+                'Last 30 days',
+                _filters.dateRange == DateRange.last30Days,
+                () => setState(
+                  () =>
+                      _filters = _filters.copyWith(
+                        dateRange: DateRange.last30Days,
+                      ),
+                ),
+              ),
+              _filterChip(
+                'All time',
+                _filters.dateRange == DateRange.allTime,
+                () => setState(
+                  () =>
+                      _filters = _filters.copyWith(
+                        dateRange: DateRange.allTime,
+                      ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Transaction Direction
+          Text(
+            'Transaction Direction',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              _filterChip(
+                'All',
+                _filters.direction == TransactionDirection.all,
+                () => setState(
+                  () =>
+                      _filters = _filters.copyWith(
+                        direction: TransactionDirection.all,
+                      ),
+                ),
+              ),
+              _filterChip(
+                'Money In',
+                _filters.direction == TransactionDirection.incoming,
+                () => setState(
+                  () =>
+                      _filters = _filters.copyWith(
+                        direction: TransactionDirection.incoming,
+                      ),
+                ),
+              ),
+              _filterChip(
+                'Money Out',
+                _filters.direction == TransactionDirection.outgoing,
+                () => setState(
+                  () =>
+                      _filters = _filters.copyWith(
+                        direction: TransactionDirection.outgoing,
+                      ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          // Transaction Type
+          Text(
+            'Transaction Type',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              _filterChip(
+                'All Types',
+                _filters.type == null,
+                () => setState(
+                  () => _filters = _filters.copyWith(clearType: true),
+                ),
+              ),
+              _filterChip(
+                'Transfers',
+                _filters.type == 'Fund Transfer',
+                () => setState(
+                  () => _filters = _filters.copyWith(type: 'Fund Transfer'),
+                ),
+              ),
+              _filterChip(
+                'Bill Payments',
+                _filters.type == 'Bill Payment',
+                () => setState(
+                  () => _filters = _filters.copyWith(type: 'Bill Payment'),
+                ),
+              ),
+            ],
+          ),
+
           const Spacer(),
+
+          // Action Buttons
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF044E42),
-                ),
                 onPressed: () {
-                  // Apply filters
-                  Navigator.pop(context);
+                  // Reset all filters
+                  setState(() => _filters = TransactionFilters());
                 },
-                child: const Text('Apply'),
+                child: Text(
+                  'Reset',
+                  style: TextStyle(color: Color(0xFF044E42)),
+                ),
+              ),
+              Row(
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: Color(0xFF044E42)),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF044E42),
+                    ),
+                    onPressed: () {
+                      widget.onlyApplyFilters(
+                        _filters,
+                      ); // Fixed from onApplyFilters
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      'Apply',
+                      style: TextStyle(color: Color(0xFFF8FFE5)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _filterChip(String label, bool isSelected, VoidCallback onTap) {
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onTap(),
+      selectedColor: Color(0xFF06D6A0).withAlpha(51),
+      checkmarkColor: Color(0xFF044E42),
     );
   }
 }
