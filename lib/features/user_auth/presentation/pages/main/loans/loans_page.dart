@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/addingAccounts/addingaccountloans_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/loans/loansdetails_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountsPage_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_card_accountspages.dart';
@@ -239,9 +240,18 @@ class _LoansPageState extends State<LoansPage> {
                             isHidden: !_eyeEnabled,
                             onTap: () {
                               // To be implemented
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(card['docId'])),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => LoansdetailsPage(
+                                        loanId: card['docId'],
+                                      ),
+                                ),
                               );
+                              // ScaffoldMessenger.of(context).showSnackBar(
+                              //   SnackBar(content: Text(card['docId'])),
+                              // );
                             },
                           ),
                         ),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/addingAccounts/addingaccountcreditcards_page.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/creditCard/creditcarddetails_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountspage_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_card_accountspages.dart';
@@ -147,7 +148,7 @@ class _CreditcardPageState extends State<CreditcardPage> {
           'limit': creditLimit,
           'accountType': cardTypeName,
           'secondDetail': 'Billing Due: $billingDueDate',
-          'thirdDetail': 'Balance ₱ ${formatCurrency(remainingCredit)}',
+          'thirdDetail': 'Balance ${formatCurrency(remainingCredit)}',
           'bankName': bankName,
           'docId': creditCardDoc.id,
         });
@@ -243,10 +244,18 @@ class _CreditcardPageState extends State<CreditcardPage> {
                             associatedName: card['bankName'],
                             isHidden: !_eyeEnabled,
                             onTap: () {
-                              // To be implemented
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(card['docId'])),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CreditCardDetailsPage(
+                                        creditCardId: card['docId'],
+                                      ),
+                                ),
                               );
+                              // ScaffoldMessenger.of(context).showSnackBar(
+                              //   SnackBar(content: Text(card['docId'])),
+                              // );
                             },
                           ),
                         ),
