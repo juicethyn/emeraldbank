@@ -3,6 +3,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/adding_account_form_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/color_style.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/text_style.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/services/account_verification.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -33,7 +34,10 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
   bool _isSavingsTypeLoading = false;
   bool _accountNumberVisible = false;
   bool _cvvVisible = false;
+  bool _isVerifying = false;
   Map<String, String> _bankNameToIdMap = {};
+  Map<String, String> _savingsTypeToIdMap = {};
+  final _accountVerificationService = AccountVerificationService();
 
   @override
   void initState() {
@@ -102,13 +106,21 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
                 .collection('savingsProducts')
                 .get();
 
+        // Store both name and ID
         final savingsTypes =
-            savingsProductSnapshot.docs
-                .map((doc) => doc['name'] as String)
-                .toList();
+            savingsProductSnapshot.docs.map((doc) {
+              return {'id': doc.id, 'name': doc['name'] as String};
+            }).toList();
+
+        // Create a map from name to ID for verification
+        _savingsTypeToIdMap = {
+          for (var type in savingsTypes)
+            type['name'] as String: type['id'] as String,
+        };
 
         setState(() {
-          _savingsTypes = savingsTypes;
+          _savingsTypes =
+              savingsTypes.map((type) => type['name'] as String).toList();
           _selectedSavingsType = null;
           _isSavingsTypeLoading = false;
         });
@@ -136,15 +148,78 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Process later the formd data and firestore saving
-      // Firestore Logic Here
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Savings Account Added Successfully')),
-      );
-      // Navigate to previous screen
-      Navigator.pop(context);
+      // Show verification in progress
+      setState(() {
+        _isVerifying = true;
+      });
+
+      try {
+        final selectedBankId =
+            _selectedBank != null ? _bankNameToIdMap[_selectedBank!] : null;
+        final selectedSavingsTypeId =
+            _selectedSavingsType != null && selectedBankId != null
+                ? _savingsTypeToIdMap[_selectedSavingsType!]
+                : null;
+
+        // Attempt to verify the account
+        final verificationResult = await _accountVerificationService
+            .verifySavingsAccount(
+              accountNumber: _accountNumberController.text,
+              accountHolderName: _nameController.text,
+              dateOfBirth: _dobController.text,
+              contactNumber: _phoneController.text,
+              emailAddress: _emailController.text,
+              bankId: selectedBankId,
+              savingsTypeId: selectedSavingsTypeId,
+            );
+
+        setState(() {
+          _isVerifying = false;
+        });
+
+        if (verificationResult.isValid &&
+            verificationResult.accountData != null) {
+          // Add the verified account to user's profile
+          final accountPath = verificationResult.accountData!['path'] as String;
+          final success = await _accountVerificationService
+              .addVerifiedAccountToUser(
+                accountType: 'savings',
+                accountPath: accountPath,
+              );
+
+          if (success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Savings Account Added Successfully'),
+              ),
+            );
+
+            // Return true to indicate success
+            Navigator.pop(context, true);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to add account to your profile'),
+              ),
+            );
+            // Don't pop or return false
+          }
+        } else {
+          // Show verification error
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(verificationResult.message)));
+        }
+      } catch (e) {
+        setState(() {
+          _isVerifying = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      }
     }
   }
 
@@ -485,12 +560,12 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
 
                       const SizedBox(height: 16),
 
-                      // Credit Card Type Dropdown
+                      // Savings account Type
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Credit Card Type',
+                            'Savings Account Type',
                             style: FormStyles.labelStyle,
                           ),
 
@@ -507,7 +582,7 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
                             ),
 
                             hint: Text(
-                              'Choose Credit Card Type',
+                              'Choose Savings Account Type',
                               style: FormStyles.hintStyle,
                             ),
 
@@ -718,7 +793,7 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: ElevatedButton(
-                            onPressed: _submitForm,
+                            onPressed: _isVerifying ? null : _submitForm,
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white,
                               backgroundColor: Colors.transparent,
@@ -728,10 +803,20 @@ class _AddingAccountSavingsPageState extends State<AddingAccountSavingsPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              'Add Credit Card Account',
-                              style: FormStyles.submitFormButtonLabel,
-                            ),
+                            child:
+                                _isVerifying
+                                    ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                    : const Text(
+                                      'Add Savings Account',
+                                      style: FormStyles.submitFormButtonLabel,
+                                    ),
                           ),
                         ),
                       ),

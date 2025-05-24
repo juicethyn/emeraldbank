@@ -129,7 +129,7 @@ String formatDateToWords(String? dateString) {
   }
 }
 
-String formatTransactionDate(Timestamp? timestamp) {
+String formatTransactionDateRecent(Timestamp? timestamp) {
   if (timestamp == null) return 'Unknown date';
 
   final now = DateTime.now();
@@ -151,19 +151,40 @@ String formatTransactionDate(Timestamp? timestamp) {
   }
 }
 
+String formatTransactionDateAtHour(Timestamp timestamp) {
+  final date = timestamp.toDate();
+  return DateFormat('MM/dd/yyyy, \'at\' h:mma').format(date);
+}
+
 IconData getTransactionIcon(String? transactionType) {
-  switch (transactionType) {
-    case 'Fund Transfer':
+  // Handle null case first
+  if (transactionType == null) return Icons.account_balance_wallet;
+
+  // Convert to lowercase for case-insensitive comparison
+  final type = transactionType.toLowerCase().trim();
+
+  switch (type) {
+    case 'fund transfer':
       return Icons.swap_horiz;
-    case 'Bill Payment':
+    case 'bill payment':
       return Icons.receipt_long;
-    case 'Withdrawal':
+    case 'withdrawal':
       return Icons.money_off;
-    case 'Deposit':
+    case 'deposit':
       return Icons.savings;
-    case 'Payment':
+    case 'payment':
       return Icons.payment;
+    // Add more flexible matching with contains() for partial matches
     default:
+      // Try partial matching if exact match fails
+      if (type.contains('transfer')) return Icons.swap_horiz;
+      if (type.contains('bill') || type.contains('payment')) {
+        return Icons.receipt_long;
+      }
+      if (type.contains('withdraw')) return Icons.money_off;
+      if (type.contains('deposit')) return Icons.savings;
+
+      // Ultimate fallback
       return Icons.account_balance_wallet;
   }
 }

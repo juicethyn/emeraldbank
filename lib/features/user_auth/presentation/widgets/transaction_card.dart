@@ -21,7 +21,7 @@ class TransactionCard extends StatelessWidget {
     final totalAmount = amount + fee;
 
     final transactionDate = transaction['transactionDate'] as Timestamp?;
-    final dateString = formatTransactionDate(transactionDate);
+    final dateString = formatTransactionDateRecent(transactionDate);
 
     final sourceRef = transaction['source']?['sourceRef'];
     final sourceRefPath =

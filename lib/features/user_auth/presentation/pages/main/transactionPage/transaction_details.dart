@@ -1,15 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountdetails_appbar.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_details_section.dart';
 import 'package:emeraldbank_mobileapp/utils/formatting_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
-// Extension to capitalize the first letter of a string
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1)}";
-  }
-}
 
 class TransactionDetails extends StatefulWidget {
   final String transactionId;
@@ -68,26 +61,6 @@ class _TransactionDetailsState extends State<TransactionDetails> {
     }
   }
 
-  String _formatTransactionDate(Timestamp timestamp) {
-    final date = timestamp.toDate();
-    return DateFormat('MM/dd/yyyy, \'at\' h:mma').format(date);
-  }
-
-  IconData _getTransactionIcon(String? transactionType) {
-    switch (transactionType) {
-      case 'Fund Transfer':
-        return Icons.swap_horiz;
-      case 'Bill Payment':
-        return Icons.receipt;
-      case 'Cash Deposit':
-        return Icons.money;
-      case 'Withdrawal':
-        return Icons.payments;
-      default:
-        return Icons.payments;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,7 +82,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
     final totalAmount = amount + fee;
 
     final transactionDate = _transaction!['transactionDate'] as Timestamp;
-    final formattedDate = _formatTransactionDate(transactionDate);
+    final formattedDate = formatTransactionDateAtHour(transactionDate);
 
     final channelType =
         _transaction!['channelDetails']?['channelType'] ?? 'Mobile Banking';
@@ -126,6 +99,8 @@ class _TransactionDetailsState extends State<TransactionDetails> {
             // Top section with icon, amount, and type
             Column(
               children: [
+                SizedBox(height: 24),
+
                 // Circular icon with gradient background
                 Container(
                   width: 64,
@@ -143,7 +118,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _getTransactionIcon(transactionType),
+                    getTransactionIcon(transactionType),
                     color: const Color(0xFFF8FFE5),
                     size: 32,
                   ),
@@ -165,27 +140,18 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                     channelType,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF1A1819),
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 24),
 
                 // Amount and type
                 Column(
                   children: [
-                    Text(
-                      formatCurrency(totalAmount),
-                      style: const TextStyle(
-                        fontFamily: 'Montserrat',
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
                     Text(
                       transactionType,
                       style: const TextStyle(
@@ -195,10 +161,23 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                         color: Color(0x99044E42),
                       ),
                     ),
+
+                    const SizedBox(height: 2),
+
+                    Text(
+                      formatCurrency(totalAmount),
+                      style: const TextStyle(
+                        fontFamily: 'Montserrat',
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
 
             // Date, status, reference number
@@ -217,7 +196,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                       formattedDate.toLowerCase(),
                       style: const TextStyle(
                         fontFamily: 'Montserrat',
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF4D4D4D),
                       ),
@@ -243,7 +222,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                           : status,
                       style: const TextStyle(
                         fontFamily: 'Montserrat',
-                        fontSize: 12,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF4D4D4D),
                       ),
@@ -252,6 +231,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                 ),
               ],
             ),
+
             const SizedBox(height: 16),
 
             // Reference number
@@ -266,7 +246,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                     'Reference Number: ',
                     style: TextStyle(
                       fontFamily: 'Montserrat',
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF161314),
                     ),
@@ -275,7 +255,7 @@ class _TransactionDetailsState extends State<TransactionDetails> {
                     referenceNumber,
                     style: const TextStyle(
                       fontFamily: 'Montserrat',
-                      fontSize: 12,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF4D4D4D),
                     ),
@@ -287,104 +267,21 @@ class _TransactionDetailsState extends State<TransactionDetails> {
             const SizedBox(height: 24),
 
             // Additional transaction details
-            _buildTransactionDetailsSection(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTransactionDetailsSection() {
-    // Add more transaction details like source, destination, fee, etc.
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Transaction Details',
-              style: TextStyle(
-                fontFamily: 'Montserrat',
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF044E42),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Source info
-            _detailRow('Source', _getSourceName()),
-            _divider(),
-
-            // Destination info
-            _detailRow('Destination', _getDestinationName()),
-            _divider(),
-
-            // Amount row
-            _detailRow(
-              'Amount',
-              formatCurrency(toDouble(_transaction!['amount'])),
-            ),
-            _divider(),
-
-            // Fee row if present
-            if (_transaction!['fee'] != null &&
-                toDouble(_transaction!['fee']) > 0)
-              _detailRow('Fee', formatCurrency(toDouble(_transaction!['fee']))),
-
-            if (_transaction!['fee'] != null &&
-                toDouble(_transaction!['fee']) > 0)
-              _divider(),
-
-            // Total amount
-            _detailRow(
-              'Total Amount',
-              formatCurrency(
-                toDouble(_transaction!['amount']) +
-                    toDouble(_transaction!['fee'] ?? 0),
-              ),
-              isHighlighted: true,
+            AccountDetailsSection(
+              sectionTitle: 'Transaction Details',
+              details: {
+                'Source': _getSourceName(),
+                'Destination:': _getDestinationName(),
+                'Amount': formatCurrency(amount),
+                'Fee': formatCurrency(fee),
+                'Total Amount': formatCurrency(totalAmount),
+              },
+              eneableToggle: false,
             ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _detailRow(String label, String value, {bool isHighlighted = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF4D4D4D),
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Montserrat',
-              fontSize: 12,
-              fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
-              color: isHighlighted ? const Color(0xFF044E42) : Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider() {
-    return const Divider(color: Color(0xFFEEEEEE), height: 1);
   }
 
   String _getSourceName() {

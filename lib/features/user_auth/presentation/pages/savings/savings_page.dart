@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/addingAccounts/addingaccountsavings_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/savings/savingsdetails_page.dart';
@@ -20,10 +22,18 @@ class _SavingsPageState extends State<SavingsPage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _savings = [];
 
+  StreamSubscription<QuerySnapshot>? _savingsStreamSubscription;
+
   @override
   void initState() {
     super.initState();
-    _fetchSavingsData();
+    _setupSavingsListener();
+  }
+
+  @override
+  void dispose() {
+    _savingsStreamSubscription?.cancel();
+    super.dispose();
   }
 
   void _toggleEye() {
@@ -109,143 +119,163 @@ class _SavingsPageState extends State<SavingsPage> {
   }
 
   Future<void> _fetchSavingsData() async {
+    // Simply call your existing setup method to refresh the data
+    await _setupSavingsListener();
+    return;
+  }
+
+  Future<void> _setupSavingsListener() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
-    try {
-      //Current User
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Get Account References
-      final accountRefsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .collection('accountReferences')
-              .limit(1)
-              .get();
-
-      if (accountRefsSnapshot.docs.isEmpty) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Get Savings References
-      final accountRefsDoc = accountRefsSnapshot.docs.first;
-      final data = accountRefsDoc.data();
-      final savingsRefs = data['savingsAccounts'] as List?;
-
-      if (savingsRefs == null ||
-          savingsRefs.isEmpty ||
-          savingsRefs.first == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      // Process Each Savings
-      final cards = <Map<String, dynamic>>[];
-
-      for (final ref in savingsRefs) {
-        if (ref == null) continue;
-
-        final String refPath =
-            ref is DocumentReference ? ref.path : ref.toString();
-
-        // Get Savings Document Using Reference
-        final savingsDoc = await FirebaseFirestore.instance.doc(refPath).get();
-
-        if (!savingsDoc.exists) continue;
-
-        final cardData = savingsDoc.data()!;
-
-        // Get Account Type Details
-        final accountTypeRef =
-            cardData['savingsAccountInformation']['accountType'];
-        String cardTypeName = 'Savings Account';
-        String? interestRate;
-        if (accountTypeRef != null) {
-          try {
-            if (accountTypeRef is DocumentReference) {
-              final accountTypeDoc = await accountTypeRef.get();
-              if (accountTypeDoc.exists) {
-                final data = accountTypeDoc.data() as Map<String, dynamic>;
-                cardTypeName = data['name'] ?? 'Savings Account';
-
-                if (data.containsKey('interestRate')) {
-                  interestRate = formatInterestRateDisplay(
-                    data['interestRate'],
-                  );
-                }
-              }
+    // Listen to accountReferences document for changes
+    _savingsStreamSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('accountReferences')
+        .limit(1)
+        .snapshots()
+        .listen(
+          (snapshot) async {
+            if (snapshot.docs.isEmpty) {
+              setState(() {
+                _savings = [];
+                _isLoading = false;
+              });
+              return;
             }
-          } catch (e) {
-            print('Error fetching account type: $e');
-          }
-        }
 
-        // Get Bank Details
-        final bankRef = cardData['savingsAccountInformation']['associatedBank'];
-        String bankName = 'Bank';
-        if (bankRef != null) {
-          if (bankRef != null) {
+            final accountRefsDoc = snapshot.docs.first;
+            final data = accountRefsDoc.data();
+            final savingsRefs = data['savingsAccounts'] as List?;
+
+            if (savingsRefs == null || savingsRefs.isEmpty) {
+              setState(() {
+                _savings = [];
+                _isLoading = false;
+              });
+              return;
+            }
+
+            // Process each savings account
             try {
-              if (bankRef is DocumentReference) {
-                final bankRefDoc = await bankRef.get();
-                if (bankRefDoc.exists) {
-                  final data = bankRefDoc.data() as Map<String, dynamic>;
-                  bankName = data['short_name'] ?? 'Bank';
+              final cards = <Map<String, dynamic>>[];
+
+              for (final ref in savingsRefs) {
+                if (ref == null) continue;
+
+                final String refPath =
+                    ref is DocumentReference ? ref.path : ref.toString();
+
+                // Get savings document using reference
+                final savingsDoc =
+                    await FirebaseFirestore.instance.doc(refPath).get();
+
+                if (!savingsDoc.exists) continue;
+                final cardData = savingsDoc.data()!;
+
+                // Get Account Type Details
+                final accountTypeRef =
+                    cardData['savingsAccountInformation']['accountType'];
+                String cardTypeName = 'Savings Account';
+                String? interestRate;
+                if (accountTypeRef != null) {
+                  try {
+                    if (accountTypeRef is DocumentReference) {
+                      final accountTypeDoc = await accountTypeRef.get();
+                      if (accountTypeDoc.exists) {
+                        final data =
+                            accountTypeDoc.data() as Map<String, dynamic>;
+                        cardTypeName = data['name'] ?? 'Savings Account';
+
+                        if (data.containsKey('interestRate')) {
+                          interestRate = formatInterestRateDisplay(
+                            data['interestRate'],
+                          );
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    print('Error fetching account type: $e');
+                  }
                 }
+
+                // Get Bank Details
+                final bankRef =
+                    cardData['savingsAccountInformation']['associatedBank'];
+                String bankName = 'Bank';
+                if (bankRef != null) {
+                  if (bankRef != null) {
+                    try {
+                      if (bankRef is DocumentReference) {
+                        final bankRefDoc = await bankRef.get();
+                        if (bankRefDoc.exists) {
+                          final data =
+                              bankRefDoc.data() as Map<String, dynamic>;
+                          bankName = data['short_name'] ?? 'Bank';
+                        }
+                      }
+                    } catch (e) {
+                      print('Error Fetching account type: $e');
+                    }
+                  }
+                }
+
+                // Extracting remaining essential details
+                final remainingBalance =
+                    (cardData['currentBalance'] ?? 0).toDouble();
+                final accountNumber =
+                    (cardData['savingsAccountInformation']?['accountNumber'] ??
+                        'N/A');
+
+                final lastTransaction = await _getLastTransaction(
+                  savingsDoc.id,
+                );
+                final lastTransactionText =
+                    lastTransaction != null
+                        ? '${lastTransaction['formattedDate']} (${lastTransaction['isIncoming'] ? '+' : '-'} ${formatCurrency(lastTransaction['amount'] + lastTransaction['fee'])})'
+                        : 'No transaction history';
+
+                cards.add({
+                  'balance': remainingBalance,
+                  'accountType': cardTypeName,
+                  'secondDetail': accountNumber,
+                  'thirdDetail': lastTransactionText,
+                  'bankName': bankName,
+                  'docId': savingsDoc.id,
+                  'interestRate': interestRate,
+                  'hasInterestRate': interestRate != null,
+                });
               }
+
+              setState(() {
+                _savings = cards;
+                _isLoading = false;
+              });
             } catch (e) {
-              print('Error Fetching account type: $e');
+              print('Error processing savings data: $e');
+              setState(() {
+                _isLoading = false;
+              });
             }
-          }
-        }
-
-        // Extracting remaining essential details
-        final remainingBalance = (cardData['currentBalance'] ?? 0).toDouble();
-        final accountNumber =
-            (cardData['savingsAccountInformation']?['accountNumber'] ?? 'N/A');
-
-        final lastTransaction = await _getLastTransaction(savingsDoc.id);
-        final lastTransactionText =
-            lastTransaction != null
-                ? '${lastTransaction['formattedDate']} (${lastTransaction['isIncoming'] ? '+' : '-'} ${formatCurrency(lastTransaction['amount'] + lastTransaction['fee'])})'
-                : 'No transaction history';
-
-        cards.add({
-          'balance': remainingBalance,
-          'accountType': cardTypeName,
-          'secondDetail': accountNumber,
-          'thirdDetail': lastTransactionText,
-          'bankName': bankName,
-          'docId': savingsDoc.id,
-          'interestRate': interestRate,
-          'hasInterestRate': interestRate != null,
-        });
-      }
-
-      setState(() {
-        _savings = cards;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error fetching credit card data: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
+          },
+          onError: (error) {
+            print('Error listening to savings accounts: $error');
+            setState(() {
+              _isLoading = false;
+            });
+          },
+        );
   }
 
   @override
@@ -266,13 +296,20 @@ class _SavingsPageState extends State<SavingsPage> {
         child: Ink(
           decoration: BoxDecoration(gradient: Customgradients.iconGradient),
           child: InkWell(
-            onTap:
-                () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddingAccountSavingsPage(),
-                  ),
+            onTap: () async {
+              // Wait for result from AddingAccountSavingsPage
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AddingAccountSavingsPage(),
                 ),
+              );
+
+              // If account was added successfully, refresh data
+              if (result == true) {
+                await _fetchSavingsData(); // Refresh savings data
+              }
+            },
             child: const SizedBox(
               width: 56,
               height: 56,
@@ -308,46 +345,51 @@ class _SavingsPageState extends State<SavingsPage> {
                   ],
                 ),
               )
-              : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ..._savings.map(
-                        (card) => Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: AccountCard(
-                            balanceHolder: card['balance'],
-                            accountTypeHolder: card['accountType'],
-                            secondDetail: formatAccountNumber(
-                              card['secondDetail'],
+              : RefreshIndicator(
+                onRefresh: () => _fetchSavingsData(),
+                color: const Color(0xFF06D6A0),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ..._savings.map(
+                          (card) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: AccountCard(
+                              balanceHolder: card['balance'],
+                              accountTypeHolder: card['accountType'],
+                              secondDetail: formatAccountNumber(
+                                card['secondDetail'],
+                              ),
+                              thirdDetail: card['thirdDetail'],
+                              associatedName: card['bankName'],
+                              isAccountNumber: true,
+                              isHidden: !_eyeEnabled,
+                              hasInterestRate: card['hasInterestRate'],
+                              interestRate: card['interestRate'],
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => SavingsDetailsPage(
+                                          savingsId: card['docId'],
+                                        ),
+                                  ),
+                                );
+                                // ----------------------
+                                // ScaffoldMessenger.of(context).showSnackBar(
+                                //   SnackBar(content: Text(card['docId'])),
+                                // );
+                              },
                             ),
-                            thirdDetail: card['thirdDetail'],
-                            associatedName: card['bankName'],
-                            isAccountNumber: true,
-                            isHidden: !_eyeEnabled,
-                            hasInterestRate: card['hasInterestRate'],
-                            interestRate: card['interestRate'],
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => SavingsDetailsPage(
-                                        savingsId: card['docId'],
-                                      ),
-                                ),
-                              );
-                              // ----------------------
-                              // ScaffoldMessenger.of(context).showSnackBar(
-                              //   SnackBar(content: Text(card['docId'])),
-                              // );
-                            },
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
