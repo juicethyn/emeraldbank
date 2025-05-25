@@ -74,19 +74,23 @@ class _CustomizePageState extends State<CustomizePage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 16,
-                vertical: 8),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: List.generate(widget.allShortcuts.length, (index) {
+                vertical: 8,
+              ),
+              child: GridView.builder(
+                itemCount: widget.allShortcuts.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4, // Always 4 per row
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 1.1, // Adjust for your button's shape
+                ),
+                itemBuilder: (context, index) {
                   final shortcut = widget.allShortcuts[index];
                   final isChecked = isSelected(shortcut['key']);
 
                   return GestureDetector(
                     onTap: () => toggleShortcut(shortcut),
                     child: Container(
-                      width: 88,
-                      height: 80,
                       decoration: BoxDecoration(
                         color: isChecked ? const Color(0xFF06D6A0).withOpacity(0.2) : Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -120,7 +124,9 @@ class _CustomizePageState extends State<CustomizePage> {
                       ),
                     ),
                   );
-                }),
+                },
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
               ),
             ),
           ),

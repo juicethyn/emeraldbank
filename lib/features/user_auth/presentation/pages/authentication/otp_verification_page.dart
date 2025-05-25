@@ -214,43 +214,49 @@ void _verifyOtp() async {
                       textAlign: TextAlign.justify,
                     ),
                 SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(6, (index) {
-                    return Container(
-                      width: 53,
-                      margin: EdgeInsets.symmetric(horizontal: 5),
-                      child: TextField(
-                        controller: _controllers[index],
-                        focusNode: _focusNodes[index],
-                        keyboardType: TextInputType.number,
-                        maxLength: 1,
-                        decoration: InputDecoration(
-                          counterText: '',
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFF06D6A0),
-                              width: 1.5,
-                            )
+                // Wrap the Row in a SingleChildScrollView for horizontal scrolling
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (index) {
+                      return Container(
+                        width: 44, // Reduced width for better fit
+                        margin: EdgeInsets.symmetric(horizontal: 4),
+                        child: TextField(
+                          controller: _controllers[index],
+                          focusNode: _focusNodes[index],
+                          keyboardType: TextInputType.number,
+                          maxLength: 1,
+                          decoration: InputDecoration(
+                            counterText: '',
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Color(0xFF06D6A0),
+                                width: 1.5,
+                              )
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: Color(0xFF06D6A0),
+                                width: 2,
+                              )
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                              color: Color(0xFF06D6A0),
-                              width: 2,
-                            )
-                          ),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          onChanged: (value) {
+                            if (value.isNotEmpty && index < 5) {
+                              FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
+                            }
+                            if (_controllers.every((controller) => controller.text.isNotEmpty)) {
+                              _isVerifying ? null : _verifyOtp();
+                            }
+                          },
                         ),
-                        onChanged: (value) {
-                          if (value.isNotEmpty && index < 5) {
-                            FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
-                          }
-                          if (_controllers.every((controller) => controller.text.isNotEmpty)) {
-                            _isVerifying ? null : _verifyOtp(); // Automatically verify when all fields are filled
-                          }
-                        },
-                      ),
-                    );
-                  }),
+                      );
+                    }),
+                  ),
                 ),
                 SizedBox(height: 30),
                 Text("Didnt Receive Message?",

@@ -513,21 +513,24 @@ class _HomePageState extends State<HomePage> {
                 ]
               ),
           
-              SizedBox(
-                width: double.infinity,
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.start,
-                  children: List.generate(visibleShortcuts.length, (index) {
-                    String imagePath = visibleShortcuts[index]['image']!;
-                    String text = visibleShortcuts[index]['text']!;
-                    String key = visibleShortcuts[index]['key']!;
-
-                    return ShortcutButton(
-                      imagePath: imagePath, 
-                      text: text, 
-                      onTapCallback: (context) {
+              GridView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4, // Always 4 per row
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 0.85, // Adjust for your button's shape
+                ),
+                itemCount: visibleShortcuts.length,
+                itemBuilder: (context, index) {
+                  String imagePath = visibleShortcuts[index]['image']!;
+                  String text = visibleShortcuts[index]['text']!;
+                  String key = visibleShortcuts[index]['key']!;
+                  return ShortcutButton(
+                    imagePath: imagePath,
+                    text: text,
+                    onTapCallback: (context) {
                       switch (key) {
                         case 'send':
                           Navigator.push(context, MaterialPageRoute(builder: (_) => SendTransferScreen(user: widget.user)));
@@ -538,15 +541,12 @@ class _HomePageState extends State<HomePage> {
                         case 'invest':
                           Navigator.push(context, MaterialPageRoute(builder: (_) => InvestmentPage()));
                           break;
-                        // add more actions here...
                         default:
                           showSnackbarMessage(context, "Feature is currently Under Development");
-                          // print('Unknown shortcut key: $key');
                       }
-                              }   
-                      );
-                  }),
-                ),
+                    },
+                  );
+                },
               ),
             Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
