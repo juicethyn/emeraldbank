@@ -40,11 +40,8 @@ class ConfirmationReceiptBillPage extends StatelessWidget {
                   _infoRow("Account Holder", accountHolder),
                   _infoRow("Amount", "₱ $amount"),
                   _infoRow("Date", paymentDate),
-                  SizedBox(height: 20),
-                  Text(
-                    "Are you sure you want to proceed with this payment?",
-                    style: TextStyle(color: Colors.grey.shade800),
-                  ),
+                  SizedBox(height: 16),
+                  Text("Are you sure you want to proceed with this payment?"),
                 ],
               ),
             ),
@@ -52,19 +49,7 @@ class ConfirmationReceiptBillPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProcessingReceiptBillPage(
-                        billerName: billerName,
-                        accountHolder: accountHolder,
-                        amount: amount,
-                        paymentDate: paymentDate,
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => _showConfirmationDialog(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF015C4B),
                   minimumSize: Size(double.infinity, 50),
@@ -88,6 +73,72 @@ class ConfirmationReceiptBillPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: Colors.grey.shade700)),
+          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  void _showConfirmationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text("Confirm Payment"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _dialogInfo("Biller", billerName),
+            _dialogInfo("Amount", "₱ $amount"),
+            _dialogInfo("Date", paymentDate),
+            SizedBox(height: 12),
+            Text("Are you sure you want to proceed with this payment?"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Color(0xFF015C4B), // text color
+              side: BorderSide(color: Color(0xFF015C4B)),
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProcessingReceiptBillPage(
+                    billerName: billerName,
+                    accountHolder: accountHolder,
+                    amount: amount,
+                    paymentDate: paymentDate,
+                  ),
+                ),
+              );
+            },
+            child: Text("Proceed"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _dialogInfo(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("$label:", style: TextStyle(fontWeight: FontWeight.w500)),
           Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),

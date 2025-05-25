@@ -75,6 +75,22 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
               ),
             ),
             SizedBox(height: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  Text(
+                    "Processing your ₱${widget.amount} payment to ${widget.billerName} on ${widget.paymentDate}$dots",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
             Stack(
               alignment: Alignment.topCenter,
               children: [
@@ -91,11 +107,6 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
                     children: [
                       SizedBox(height: 20),
                       Text(
-                        "Your Payment is Being Process$dots",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
                         "₱ ${widget.amount}",
                         style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                       ),
@@ -103,7 +114,7 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
                       Divider(height: 30),
                       _infoRow("Transaction Date", widget.paymentDate),
                       _infoRow("Payment Method", "Personal Savings | Emerald"),
-                      _infoRow("From", widget.accountHolder),
+                      _infoRow("From", "Juzzthyn Perez"),
                       _infoRow("To", widget.billerName),
                       _infoRow("Reference Number", "REF20250421XZA145"),
                       SizedBox(height: 10),
