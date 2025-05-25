@@ -438,6 +438,27 @@ class _FilterBottomSheetState extends State<FilterBottomSheet> {
                   () => _filters = _filters.copyWith(type: 'Bill Payment'),
                 ),
               ),
+              _filterChip(
+                'Withdrawals',
+                _filters.type == 'Withdrawal',
+                () => setState(
+                  () => _filters = _filters.copyWith(type: 'Withdrawal'),
+                ),
+              ),
+              _filterChip(
+                'Deposits',
+                _filters.type == 'Deposit',
+                () => setState(
+                  () => _filters = _filters.copyWith(type: 'Deposit'),
+                ),
+              ),
+              _filterChip(
+                'Payments',
+                _filters.type == 'Payment',
+                () => setState(
+                  () => _filters = _filters.copyWith(type: 'Payment'),
+                ),
+              ),
             ],
           ),
 

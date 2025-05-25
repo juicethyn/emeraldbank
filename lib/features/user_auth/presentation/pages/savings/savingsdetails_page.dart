@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/transactionPage/transaction_details.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/transactionPage/transactionhistory_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/styles/accountdetails_appbar.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/account_balance_overview.dart';
@@ -122,6 +123,8 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
         final userData = userDoc.data() as Map<String, dynamic>?;
         return userData?['accountName'] ??
             userData?['accountNickname'] ??
+            userData?['name'] ??
+            userData?['fullName'] ??
             'Account Holder';
       }
 
@@ -450,11 +453,19 @@ class _SavingsDetailsPageState extends State<SavingsDetailsPage> {
                                         ),
                                   ),
                                 );
-                                // ScaffoldMessenger.of(context).showSnackBar(
-                                //   const SnackBar(
-                                //     content: Text('All Transactions'),
-                                //   ),
-                                // );
+                              },
+                              onTransactionTap: (transaction) {
+                                // Navigate to transaction details
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => TransactionDetails(
+                                          transactionId: transaction['id'],
+                                          transactionData: transaction,
+                                        ),
+                                  ),
+                                );
                               },
                             );
                           },

@@ -198,34 +198,46 @@ class VirtualCardWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   // Name & Account
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        isHidden
-                            ? 'Hello! ${maskName(accountHolderName)}'
-                            : 'Hello! $accountHolderName',
-                        style: const TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1819),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Name with wrapping
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.55,
+                          ),
+                          child: Text(
+                            isHidden
+                                ? 'Hello! ${maskName(accountHolderName)}'
+                                : 'Hello! $accountHolderName',
+                            style: const TextStyle(
+                              fontFamily: 'Montserrat',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1819),
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            softWrap: true,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        isHidden
-                            ? hideAccountNumber(cardNumber)
-                            : formatAccountNumber(cardNumber),
-                        style: TextStyle(
-                          fontFamily: 'Montserrat',
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1A1819).withAlpha(128),
+                        const SizedBox(height: 2),
+                        // Card number
+                        Text(
+                          isHidden
+                              ? hideAccountNumber(cardNumber)
+                              : formatAccountNumber(cardNumber),
+                          style: TextStyle(
+                            fontFamily: 'Montserrat',
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1A1819).withAlpha(128),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
 
                   // Chip

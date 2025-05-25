@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/creditCard/creditcard_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/loans/loans_page.dart';
@@ -19,59 +21,70 @@ class _AccountPageSatate extends State<AccountPage> {
   int _loanCount = 0;
   bool _isLoading = true;
 
+  StreamSubscription<QuerySnapshot>? _accountStreamSubscription;
+
   @override
   void initState() {
     super.initState();
-    _fetchAccountCounts();
+    _setupAccountCountsListener();
   }
 
-  Future<void> _fetchAccountCounts() async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
+  @override
+  void dispose() {
+    _accountStreamSubscription?.cancel();
+    super.dispose();
+  }
 
-      if (user == null) {
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final accountRefsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('users')
-              .doc(user.uid)
-              .collection('accountReferences')
-              .limit(1)
-              .get();
-
-      if (accountRefsSnapshot.docs.isNotEmpty) {
-        final accountRefsDoc = accountRefsSnapshot.docs.first;
-        final data = accountRefsDoc.data();
-
-        // Get account count from arrays
-        final savingsAccount = data['savingsAccounts'] as List?;
-        final creditCardAccounts = data['creditCardAccounts'] as List?;
-        final loanAccounts = data['loanAccounts'] as List?;
-
-        setState(() {
-          _savingsCount =
-              savingsAccount?.where((item) => item != null).length ?? 0;
-          _creditCardCount =
-              creditCardAccounts?.where((item) => item != null).length ?? 0;
-          _loanCount = loanAccounts?.where((item) => item != null).length ?? 0;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Error fetching account counts: $e');
+  void _setupAccountCountsListener() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
       setState(() {
         _isLoading = false;
       });
+      return;
     }
+
+    // Create stream instead of one-time fetch
+    _accountStreamSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('accountReferences')
+        .limit(1)
+        .snapshots() // Use snapshots() instead of get()
+        .listen(
+          (snapshot) {
+            if (snapshot.docs.isNotEmpty) {
+              final accountRefsDoc = snapshot.docs.first;
+              final data = accountRefsDoc.data();
+
+              // Get account count from arrays
+              final savingsAccount = data['savingsAccounts'] as List?;
+              final creditCardAccounts = data['creditCardAccounts'] as List?;
+              final loanAccounts = data['loanAccounts'] as List?;
+
+              setState(() {
+                _savingsCount =
+                    savingsAccount?.where((item) => item != null).length ?? 0;
+                _creditCardCount =
+                    creditCardAccounts?.where((item) => item != null).length ??
+                    0;
+                _loanCount =
+                    loanAccounts?.where((item) => item != null).length ?? 0;
+                _isLoading = false;
+              });
+            } else {
+              setState(() {
+                _isLoading = false;
+              });
+            }
+          },
+          onError: (error) {
+            print('Error listening to account counts: $error');
+            setState(() {
+              _isLoading = false;
+            });
+          },
+        );
   }
 
   @override
