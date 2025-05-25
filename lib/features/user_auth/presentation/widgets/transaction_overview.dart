@@ -57,13 +57,13 @@ class TransactionOverview extends StatelessWidget {
                 GestureDetector(
                   onTap: onViewAllPressed,
                   child: const Text(
-                    'view all',
+                    'View all',
                     style: TextStyle(
                       fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w700,
                       fontSize: 12,
                       height: 15 / 12,
-                      color: Colors.black,
+                      color: Color(0xFF028A6E),
                     ),
                   ),
                 ),

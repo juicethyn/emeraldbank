@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'successful_receiptbill.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class ProcessingReceiptBillPage extends StatefulWidget {
   final String billerName;
@@ -22,6 +25,7 @@ class ProcessingReceiptBillPage extends StatefulWidget {
 class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
   String dots = '';
   Timer? dotTimer;
+  double? newBalance;
 
   @override
   void initState() {
@@ -31,6 +35,9 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
     dotTimer = Timer.periodic(Duration(milliseconds: 500), (timer) {
       setState(() => dots = '.' * ((dots.length + 1) % 4));
     });
+
+    // Deduct amount from current savings account
+    _deductFromSavings();
 
     // Redirect to SuccessfulReceiptBillPage after 4 seconds
     Future.delayed(Duration(seconds: 4), () {
@@ -46,6 +53,59 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
         ),
       );
     });
+  }
+
+  Future<void> _deductFromSavings() async {
+    try {
+      // Get current user
+      final user = FirebaseFirestore.instance.collection('users');
+      final uid = await _getCurrentUid();
+      if (uid == null) return;
+
+      // Get the first savings account ID from accountReferences
+      final accountRefs = await user.doc(uid).collection('accountReferences').get();
+      String? firstSavingsId;
+      for (var doc in accountRefs.docs) {
+        final List<dynamic>? savingsAccounts = doc.data()['savingsAccounts'];
+        if (savingsAccounts != null && savingsAccounts.isNotEmpty) {
+          final id = savingsAccounts.first is String && savingsAccounts.first.contains('/')
+              ? savingsAccounts.first.split('/').last
+              : savingsAccounts.first;
+          firstSavingsId = id;
+          break;
+        }
+      }
+      if (firstSavingsId == null) return;
+
+      // Get the savings account document
+      final savingsDoc = await FirebaseFirestore.instance
+          .collection('savings')
+          .doc(firstSavingsId)
+          .get();
+
+      if (!savingsDoc.exists) return;
+
+      final savingsData = savingsDoc.data()!;
+      final currentBalance = (savingsData['currentBalance'] as num?)?.toDouble() ?? 0.0;
+      final amountToDeduct = double.tryParse(widget.amount.replaceAll(',', '')) ?? 0.0;
+      final updatedBalance = currentBalance - amountToDeduct;
+
+      // Update the balance in Firestore
+      await FirebaseFirestore.instance
+          .collection('savings')
+          .doc(firstSavingsId)
+          .update({'currentBalance': updatedBalance});
+
+      setState(() {
+        newBalance = updatedBalance;
+      });
+    } catch (e) {
+      debugPrint("Error deducting from savings: $e");
+    }
+  }
+
+  Future<String?> _getCurrentUid() async {
+    return FirebaseAuth.instance.currentUser?.uid;
   }
 
   @override
@@ -122,6 +182,8 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
                       _infoRow("Penalties", "₱ 0.00"),
                       _infoRow("Fee", "₱ 10.00"),
                       SizedBox(height: 10),
+                      if (newBalance != null)
+                        _infoRow("New Balance", "₱ ${newBalance!.toStringAsFixed(2)}"),
                       Text(
                         "Emerald Bank",
                         style: TextStyle(
@@ -155,7 +217,15 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: Colors.grey.shade700)),
-          Text(value, style: TextStyle(fontWeight: FontWeight.w500)),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.right,
+            ),
+          ),
         ],
       ),
     );

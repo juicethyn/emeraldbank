@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/bill_screen/bills_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/customize_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/transactionPage/transaction_details.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/main/transactionPage/transactionhistory_page.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/active_investment_card.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/home_text_button_widget.dart';
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/investment/choose_investment.dart';
@@ -12,6 +14,8 @@ import 'package:emeraldbank_mobileapp/utils/snackbar_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/widgets/transaction_overview.dart';
+
 class HomePage extends StatefulWidget {
   final UserModel? user;
   final bool isBalanceHidden;
@@ -36,6 +40,7 @@ class _HomePageState extends State<HomePage> {
   List<String> selectedKeys = []; // This will hold the selected shortcut keys
   late List<Map<String, dynamic>> visibleShortcuts;
   List<Map<String, dynamic>> _activeTimeDeposits = [];
+  String? savingsId;
 
   @override
   void initState() {
@@ -47,6 +52,7 @@ class _HomePageState extends State<HomePage> {
         .where((item) => selectedKeys.contains(item['key']))
         .toList();
     _fetchActiveTimeDeposits();
+    _fetchSavingsId();
   }
 
   // Callback to update selectedKeys when customization is made
@@ -80,6 +86,42 @@ class _HomePageState extends State<HomePage> {
         };
       }).toList();
     });
+  }
+
+  Future<void> _fetchSavingsId() async {
+    final uid = widget.user?.uid;
+    if (uid == null) return;
+    final accountRefs = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(uid)
+        .collection('accountReferences')
+        .get();
+    for (var doc in accountRefs.docs) {
+      final List<dynamic>? savingsAccounts = doc.data()['savingsAccounts'];
+      if (savingsAccounts != null && savingsAccounts.isNotEmpty) {
+        final id = savingsAccounts.first is String && savingsAccounts.first.contains('/')
+            ? savingsAccounts.first.split('/').last
+            : savingsAccounts.first;
+        setState(() {
+          savingsId = id;
+        });
+        break;
+      }
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> _getTransactionsStream(String accountId) {
+    final accountRef = FirebaseFirestore.instance.doc('savings/$accountId');
+    return FirebaseFirestore.instance
+        .collection('transactions')
+        .where('source.sourceRef', isEqualTo: accountRef)
+        .orderBy('transactionDate', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) {
+              final data = doc.data();
+              data['id'] = doc.id;
+              return data;
+            }).toList());
   }
 
   String formatAccountNumber(String accountCardNumber) {
@@ -187,14 +229,35 @@ class _HomePageState extends State<HomePage> {
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
-                              Text(
-                                widget.isBalanceHidden? "₱••••••" : "₱${NumberFormat('#,##0.00', 'en_PH').format(user?.balance)}",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.w600
-                                ),
-                                ),
+                              StreamBuilder<DocumentSnapshot>(
+                                stream: savingsId == null
+                                    ? null
+                                    : FirebaseFirestore.instance.collection('savings').doc(savingsId).snapshots(),
+                                builder: (context, snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return Text(
+                                      "₱••••••",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    );
+                                  }
+                                  final data = snapshot.data!.data() as Map<String, dynamic>?;
+                                  final balance = data?['currentBalance'] ?? 0.0;
+                                  return Text(
+                                    widget.isBalanceHidden
+                                        ? "₱••••••"
+                                        : "₱${NumberFormat('#,##0.00', 'en_PH').format(balance)}",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ),
                           Positioned(
@@ -575,108 +638,56 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Container(
-                width: double.infinity,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Transactions",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600
-                          )
-                          ),
-                          Text(
-                            "View all",
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF028A6E)
-                          )
-                          ),
-                        ],
+            const SizedBox(height: 16),
+            if (savingsId == null) ...[
+              const Center(child: CircularProgressIndicator()),
+            ] else ...[
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: _getTransactionsStream(savingsId!),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting && snapshot.data == null) {
+                    return const TransactionOverview(
+                      transactions: [],
+                      isLoading: true,
+                    );
+                  }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text(
+                        'Error loading transactions: ${snapshot.error}',
+                        style: TextStyle(color: Colors.red),
                       ),
-                      SizedBox(height: 4,),
-                      Container(
-                        width: double.infinity,
-                        height: 1,
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(8)
+                    );
+                  }
+                  final transactions = snapshot.data ?? [];
+                  return TransactionOverview(
+                    transactions: transactions,
+                    isLoading: false,
+                    accountId: savingsId,
+                    onViewAllPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TransactionHistoryPage(accountId: savingsId!),
                         ),
-                      ),
-                      
-                      // Michael Cruz
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8 
+                      );
+                    },
+                    onTransactionTap: (transaction) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TransactionDetails(
+                            transactionId: transaction['id'],
+                            transactionData: transaction,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                ClipOval(
-                                child: Image.asset(
-                                  'lib/assets/pictures/profilepicture.png',
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 8.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                    Text("Michael Cruz",
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600
-                                      ),
-                                    ),
-                                    Text("Today, at 1:43pm",
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500
-                                      ),
-                                    ),
-                                    ],
-                                  ),
-                                )
-                                  ],
-                            ),
-                            Text("-₱10,000.00",
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.redAccent
-                              ),
-                            ),
-                          ],),
-                      ),
-
-                    ],
-                  ),
-                ) 
-              
+                      );
+                    },
+                  );
+                },
               ),
-            ),
+            ],
+            const SizedBox(height: 16),
             ],
           ),
         ),
