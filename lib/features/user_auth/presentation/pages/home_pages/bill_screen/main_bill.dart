@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import 'confirmation_receiptbill.dart';
 
 class MainBillPage extends StatefulWidget {
@@ -15,14 +16,21 @@ class _MainBillPageState extends State<MainBillPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _paymentDateController = TextEditingController();
   final TextEditingController _endDateController = TextEditingController();
+  final TextEditingController _subscriberRefController = TextEditingController();
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
   String? _schedule;
   String? _occurrence;
   String? _frequency;
 
-  final List<String> _scheduleOptions = ['One-time', 'Recurring'];
-  final List<String> _occurrenceOptions = ['Daily', 'Weekly', 'Monthly'];
+  final List<String> _scheduleOptions = ['Immediate', 'Later'];
+  final List<String> _occurrenceOptions = ['One-time', 'Repeating'];
   final List<String> _frequencyOptions = ['Once', 'Twice', 'Thrice'];
+
+  // Permanent account info stored in app
+  final String fixedAccountHolderName = 'Juzzthyn Perez';
+  final String fixedAccountNumber = '3690 1234 5678 1630';
 
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? picked = await showDatePicker(
@@ -53,7 +61,6 @@ class _MainBillPageState extends State<MainBillPage> {
           padding: EdgeInsets.all(16),
           child: Column(
             children: [
-              // Biller Info
               Center(
                 child: Column(
                   children: [
@@ -78,58 +85,109 @@ class _MainBillPageState extends State<MainBillPage> {
               ),
               SizedBox(height: 24),
 
-              // Form
               Form(
                 key: _formKey,
                 child: Column(
                   children: [
-                    _buildTextField(label: 'Account Holder Name (Full Name)', hint: 'ex. Juan Dela Cruz'),
-                    _buildTextField(label: 'Account Number', hint: '*** *** ****'),
-                    _buildTextField(label: 'Subscriber / Reference Number'),
-                    _buildTextField(label: 'Amount', hint: 'Php. 0.00', inputType: TextInputType.number),
+                    // Fixed, non-editable account holder name
+                    _buildFixedInfoField(
+                      label: 'Account Holder Name (Full Name)',
+                      value: fixedAccountHolderName,
+                    ),
+
+                    // Fixed, non-editable account number
+                    _buildFixedInfoField(
+                      label: 'Account Number',
+                      value: fixedAccountNumber,
+                    ),
+
+                    // Editable subscriber/reference number
+                    _buildTextField(
+                      label: 'Subscriber / Reference Number',
+                      controller: _subscriberRefController,
+                    ),
+
+                    // Editable amount field
+                    _buildTextField(
+                      label: 'Amount',
+                      hint: '0.00',
+                      inputType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                      controller: _amountController,
+                    ),
 
                     _buildDropdownField(
                       label: 'Schedule of Payment',
                       value: _schedule,
                       items: _scheduleOptions,
-                      onChanged: (val) => setState(() => _schedule = val),
-                    ),
-                    _buildDropdownField(
-                      label: 'Occurrence of Payment',
-                      value: _occurrence,
-                      items: _occurrenceOptions,
-                      onChanged: (val) => setState(() => _occurrence = val),
-                    ),
-                    _buildDropdownField(
-                      label: 'Frequency of Payment',
-                      value: _frequency,
-                      items: _frequencyOptions,
-                      onChanged: (val) => setState(() => _frequency = val),
+                      onChanged: (val) {
+                        setState(() {
+                          _schedule = val;
+                          _occurrence = null;
+                          _frequency = null;
+                          _paymentDateController.clear();
+                          _endDateController.clear();
+                        });
+                      },
                     ),
 
-                    _buildDatePickerField(
-                      controller: _paymentDateController,
-                      label: 'Payment Date',
-                      note: 'Scheduled transactions will run from 8:30 am to 9:30 am on the selected dates.',
-                    ),
-                    _buildDatePickerField(
-                      controller: _endDateController,
-                      label: 'End Date',
-                    ),
+                    if (_schedule == 'Later')
+                      _buildDropdownField(
+                        label: 'Occurrence of Payment',
+                        value: _occurrence,
+                        items: _occurrenceOptions,
+                        onChanged: (val) {
+                          setState(() {
+                            _occurrence = val;
+                            _frequency = null;
+                            _paymentDateController.clear();
+                            _endDateController.clear();
+                          });
+                        },
+                      ),
 
-                    _buildTextField(label: 'Notes (Optional)', hint: 'Enter Notes'),
+                    if (_schedule == 'Later' && _occurrence == 'Repeating')
+                      _buildDropdownField(
+                        label: 'Frequency of Payment',
+                        value: _frequency,
+                        items: _frequencyOptions,
+                        onChanged: (val) => setState(() => _frequency = val),
+                      ),
+
+                    if (_schedule == 'Later' &&
+                        (_occurrence == 'One-time' || _occurrence == 'Repeating'))
+                      _buildDatePickerField(
+                        controller: _paymentDateController,
+                        label: 'Payment Date',
+                        note:
+                            'Scheduled transactions will run from 8:30 am to 9:30 am on the selected dates.',
+                      ),
+
+                    if (_schedule == 'Later' && _occurrence == 'Repeating')
+                      _buildDatePickerField(
+                        controller: _endDateController,
+                        label: 'End Date',
+                      ),
+
+                    _buildTextField(
+                      label: 'Notes (Optional)',
+                      hint: 'Enter Notes',
+                      controller: _notesController,
+                      isOptional: true,
+                    ),
 
                     SizedBox(height: 16),
                     Text(
                       'Note that our billing postings are completed within 24 hours.\n\n'
                       'Pay your bills before their due date to avoid problems. If you receive a disconnection notice, '
-                      'please pay at a ________ Center.',
+                      'please pay at a Service Center.',
                       style: TextStyle(fontSize: 12, color: Colors.black54),
                       textAlign: TextAlign.center,
                     ),
                     SizedBox(height: 20),
 
-                    // Proceed Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -147,15 +205,18 @@ class _MainBillPageState extends State<MainBillPage> {
                               MaterialPageRoute(
                                 builder: (context) => ConfirmationReceiptBillPage(
                                   billerName: widget.billerName,
-                                  accountHolder: '', // Hook this up later
-                                  amount: '', // Hook this up later
+                                  accountHolder: fixedAccountHolderName,
+                                  amount: _amountController.text,
                                   paymentDate: _paymentDateController.text,
                                 ),
                               ),
                             );
                           }
                         },
-                        child: Text('Proceed', style: TextStyle(fontSize: 16)),
+                        child: Text(
+                          'Proceed',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
                       ),
                     ),
                     SizedBox(height: 30),
@@ -173,11 +234,16 @@ class _MainBillPageState extends State<MainBillPage> {
     required String label,
     String? hint,
     TextInputType inputType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+    TextEditingController? controller,
+    bool isOptional = false,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
+        controller: controller,
         keyboardType: inputType,
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
@@ -186,7 +252,7 @@ class _MainBillPageState extends State<MainBillPage> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
         ),
         validator: (value) {
-          if (label.contains('(Optional)')) return null;
+          if (isOptional) return null;
           return (value == null || value.isEmpty) ? 'This field is required' : null;
         },
       ),
@@ -211,7 +277,10 @@ class _MainBillPageState extends State<MainBillPage> {
         ),
         items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
         onChanged: onChanged,
-        validator: (val) => val == null ? 'Please select an option' : null,
+        validator: (val) {
+          if (label.contains('(Optional)')) return null;
+          return val == null ? 'Please select an option' : null;
+        },
       ),
     );
   }
@@ -247,6 +316,26 @@ class _MainBillPageState extends State<MainBillPage> {
             )
           ]
         ],
+      ),
+    );
+  }
+
+  // New widget to display fixed info fields (non-editable)
+  Widget _buildFixedInfoField({
+    required String label,
+    required String value,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        initialValue: value,
+        enabled: false, // disables editing and grays out the field
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey.shade300,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        ),
       ),
     );
   }

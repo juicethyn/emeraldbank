@@ -2,6 +2,18 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 class ProcessingReceiptBillPage extends StatefulWidget {
+  final String billerName;
+  final String accountHolder;
+  final String amount;
+  final String paymentDate;
+
+  const ProcessingReceiptBillPage({
+    required this.billerName,
+    required this.accountHolder,
+    required this.amount,
+    required this.paymentDate,
+  });
+
   @override
   _ProcessingReceiptBillPageState createState() => _ProcessingReceiptBillPageState();
 }
@@ -15,16 +27,15 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
     super.initState();
     _startEllipsisAnimation();
 
-    // Navigate to the SuccessfulReceiptBillPage after 4 seconds
     Timer(Duration(seconds: 4), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => SuccessfulReceiptBillPage(
-            billerName: "Meralco",
-            accountHolder: "John Mark Magsaysay",
-            amount: "4,133.00",
-            paymentDate: "March 3, 2025, at 11:00am",
+            billerName: widget.billerName,
+            accountHolder: widget.accountHolder,
+            amount: widget.amount,
+            paymentDate: widget.paymentDate,
           ),
         ),
       );
@@ -79,23 +90,24 @@ class _ProcessingReceiptBillPageState extends State<ProcessingReceiptBillPage> {
                 children: [
                   SizedBox(height: 10),
                   Text(
-                    'Your Payment is Being Process$dots',
+                    'Processing your ₱${widget.amount} payment to ${widget.billerName} on ${widget.paymentDate}$dots',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    textAlign: TextAlign.center,
                   ),
                   SizedBox(height: 10),
                   Text(
-                    '₱ 4,133.00',
+                    '₱ ${widget.amount}',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
                   Text('Total Amount'),
                   Divider(height: 30),
-                  _infoRow("Transaction Date", "March 3, 2025, at 11:00am"),
+                  _infoRow("Transaction Date", widget.paymentDate),
                   _infoRow("Payment Method", "Personal Savings | Emerald"),
-                  _infoRow("From", "John Mark Magsaysay"),
-                  _infoRow("To", "Meralco"),
+                  _infoRow("From", widget.accountHolder),
+                  _infoRow("To", widget.billerName),
                   _infoRow("Reference Number", "REF20250221XZA145"),
                   SizedBox(height: 10),
-                  _infoRow("Amount", "₱ 4,123.00"),
+                  _infoRow("Amount", "₱ ${widget.amount}"),
                   _infoRow("Penalties", "₱ 0.00"),
                   _infoRow("Fee", "₱ 10.00"),
                   SizedBox(height: 10),
@@ -199,7 +211,7 @@ class SuccessfulReceiptBillPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _infoRow("Transaction Date", paymentDate),
-                    _infoRow("From", accountHolder),
+                    _infoRow("From", "Juzzthyn Perez"),
                     _infoRow("To", billerName),
                     _infoRow("Reference Number", "REF20250421XZA145"),
                     _infoRow("Amount", "₱ $amount"),
@@ -222,7 +234,7 @@ class SuccessfulReceiptBillPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text("Back to Home"),
+                child: Text("Back to Home", style: TextStyle(color: Colors.white)),
               ),
             ),
           ],

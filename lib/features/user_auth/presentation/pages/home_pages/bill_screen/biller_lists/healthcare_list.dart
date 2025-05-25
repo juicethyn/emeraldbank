@@ -1,31 +1,30 @@
 import 'package:flutter/material.dart';
-import 'main_bill.dart';
+import '../main_bill.dart';
 
-class BillerListPage extends StatelessWidget {
+class HealthcareListPage extends StatelessWidget {
   final String categoryName;
 
-  BillerListPage({required this.categoryName});
+  HealthcareListPage({required this.categoryName});
 
   final Map<String, List<String>> billersByCategory = {
-    'Airlines / Travel Agencies': [
-      'FIESTA TOURS AND TRAVELS CORP',
-      'MARSMAN DRYSDALE TRAVEL INC',
-      'PAPH TRAVEL AND TOURS',
-      'ROYAL KITES TRAVELS AND TOURS',
+    'Healthcare' : [
+      'ASALUS CORPORATION',
+      'DETOXICARE PHILS INC',
+      'PHILCARE HMO',
     ],
   };
 
   final Map<String, String> billerInitials = {
-    'FIESTA TOURS AND TRAVELS CORP': 'F',
-    'MARSMAN DRYSDALE TRAVEL INC': 'M',
-    'PAPH TRAVEL AND TOURS': 'P',
-    'ROYAL KITES TRAVELS AND TOURS': 'R',
+    'ASALUS CORPORATION': 'A',
+    'DETOXICARE PHILS INC': 'D',
+    'PHILCARE HMO': 'P',
   };
 
   @override
   Widget build(BuildContext context) {
     final List<String> billers = billersByCategory[categoryName] ?? [];
-
+    // Sort billers alphabetically
+        billers.sort((a, b) => a.compareTo(b)); 
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
@@ -48,7 +47,7 @@ class BillerListPage extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 12),
               child: TextField(
                 decoration: InputDecoration(
-                  hintText: "Search Airlines / Travel Agencies",
+                  hintText: "Search Healthcare",
                   border: InputBorder.none,
                   icon: Icon(Icons.search),
                 ),
