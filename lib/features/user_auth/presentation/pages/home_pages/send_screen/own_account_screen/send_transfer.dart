@@ -1,10 +1,16 @@
+import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/other_local_emerald/confirmation_otherbanks.dart';
+
 import 'package:emeraldbank_mobileapp/features/user_auth/presentation/pages/home_pages/send_screen/own_account_screen/send_transfer_own_account..dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:flutter/material.dart';
 
 class SendTransferScreen extends StatefulWidget {
+  const SendTransferScreen({
+    super.key,
+    required this.user,
+  });
+
   final UserModel? user;
-  SendTransferScreen({Key? key, this.user}) : super(key: key);
 
   @override
   State<SendTransferScreen> createState() => _SendTransferScreenState();
@@ -24,10 +30,6 @@ class _SendTransferScreenState extends State<SendTransferScreen> {
           },
         ),
         centerTitle: true,
-        title: const Text(
-          'Send | Own Account',
-          style: TextStyle(color: Colors.black),
-        ),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -68,7 +70,21 @@ class _SendTransferScreenState extends State<SendTransferScreen> {
                   _buildOption(
                     title: 'Other Emerald Accounts',
                     onTap: () {
-                      // Navigate to Other Emerald Accounts screen
+                      try {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OwnAccountConfirmationPage(user: user),
+                          ),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error navigating: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                   ),
                   const SizedBox(height: 10),

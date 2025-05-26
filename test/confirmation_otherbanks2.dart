@@ -47,29 +47,49 @@ class _OwnAccountConfirmationPageState
   // Add method to fetch balance
   Future<void> _fetchUserBalance() async {
     try {
-      final accNum = widget.user?.accountNumber ?? '';
-      if (accNum.isEmpty) return;
+      if (widget.user?.uid != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.user!.uid)
+            .get();
 
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('savings')
-          .where('savingsAccountInformation.accountNumber', isEqualTo: accNum)
-          .get();
+        final userData = userDoc.data();
+        if (userData == null) {
+          print('No user data found');
+          return;
+        }
 
-      if (querySnapshot.docs.isNotEmpty) {
-        final savingsData = querySnapshot.docs.first.data();
-        setState(() {
-          userBalance = (savingsData['currentBalance'] ?? 0.0).toDouble();
-        });
-      } else {
-        setState(() {
-          userBalance = 0.0;
-        });
+        final accountReferences = userData['accountReferences'];
+        if (accountReferences == null) {
+          print('No accountReferences found');
+          return;
+        }
+
+        final List<dynamic>? savingsAccounts = accountReferences['savingsAccounts'];
+        if (savingsAccounts == null || savingsAccounts.isEmpty) {
+          print('No savingsAccounts found');
+          return;
+        }
+
+        final firstSavingsRef = savingsAccounts.first;
+        if (firstSavingsRef is! DocumentReference) {
+          print('First savings account is not a DocumentReference: $firstSavingsRef');
+          return;
+        }
+
+        final savingsDoc = await firstSavingsRef.get();
+        final savingsData = savingsDoc.data() as Map<String, dynamic>?;
+
+        if (savingsData != null) {
+          setState(() {
+            userBalance = (savingsData['currentBalance'] ?? 0.0).toDouble();
+          });
+        } else {
+          print('No savings data found for reference');
+        }
       }
     } catch (e) {
       print('Error fetching balance: $e');
-      setState(() {
-        userBalance = 0.0;
-      });
     }
   }
 
@@ -374,8 +394,40 @@ class _OwnAccountConfirmationPageState
 
                 double amount = double.parse(_amountController.text);
 
-                // Check sender's balance
-                if (amount > (userBalance ?? 0)) {
+                // Query the sender's first savings account
+                final senderSavingsQuery = await FirebaseFirestore.instance
+                    .collection('savings')
+                    .where('accountHolder', isEqualTo: "users/${widget.user!.uid}")
+                    .get();
+
+                if (senderSavingsQuery.docs.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('No savings account found for the sender.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final senderDoc = senderSavingsQuery.docs.first;
+                final senderData = senderDoc.data();
+
+                String? senderAccountNumber;
+                if (senderData.containsKey('savingsAccountInformation') &&
+                    senderData['savingsAccountInformation'] != null &&
+                    senderData['savingsAccountInformation']['accountNumber'] != null) {
+                  senderAccountNumber = senderData['savingsAccountInformation']['accountNumber'];
+                } else if (senderData['accountNumber'] != null) {
+                  senderAccountNumber = senderData['accountNumber'];
+                } else {
+                  senderAccountNumber = '';
+                }
+
+                double senderBalance = userBalance ?? 0.0;
+
+                // Check balance
+                if (amount > senderBalance) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Insufficient balance'),
@@ -385,51 +437,56 @@ class _OwnAccountConfirmationPageState
                   return;
                 }
 
-                // 1. Deduct from sender
-                final senderQuery = await FirebaseFirestore.instance
-                    .collection('savings')
-                    .where('savingsAccountInformation.accountNumber', isEqualTo: widget.user!.accountNumber)
-                    .get();
+                // Deduct from sender
+                double newSenderBalance = senderBalance - amount;
+                await senderDoc.reference.update({'currentBalance': newSenderBalance});
+                setState(() {
+                  userBalance = newSenderBalance;
+                });
 
-                if (senderQuery.docs.isEmpty) {
-                  throw Exception('Sender account not found');
-                }
-                final senderDoc = senderQuery.docs.first.reference;
-                final senderData = senderQuery.docs.first.data();
-                double senderNewBalance = (senderData['currentBalance'] ?? 0.0).toDouble() - amount;
-                await senderDoc.update({'currentBalance': senderNewBalance});
-
-                // 2. Credit to recipient
+                // Query the recipient's savings account by accountNumber
                 final recipientQuery = await FirebaseFirestore.instance
                     .collection('savings')
                     .where('savingsAccountInformation.accountNumber', isEqualTo: _accountNumberController.text)
                     .get();
 
                 if (recipientQuery.docs.isEmpty) {
-                  throw Exception('Recipient account not found');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Recipient account not found.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
                 }
-                final recipientDoc = recipientQuery.docs.first.reference;
-                final recipientData = recipientQuery.docs.first.data();
-                double recipientNewBalance = (recipientData['currentBalance'] ?? 0.0).toDouble() + amount;
-                await recipientDoc.update({'currentBalance': recipientNewBalance});
 
-                // 3. Create transaction record
-                await FirebaseFirestore.instance.collection('transactions').add({
-                  'source': {
-                    'sourceRef': senderDoc,
-                    'accountNumber': widget.user!.accountNumber,
+                final recipientDoc = recipientQuery.docs.first;
+                final recipientData = recipientDoc.data();
+                double recipientBalance = (recipientData['currentBalance'] ?? 0.0).toDouble();
+
+                // Add to recipient
+                double newRecipientBalance = recipientBalance + amount;
+                await recipientDoc.reference.update({'currentBalance': newRecipientBalance});
+
+                // Log the transaction
+                await FirebaseFirestore.instance.collection('transactions').add(
+                  {
+                    'source': {
+                      'sourceRef': senderDoc.reference,
+                      'accountNumber': senderAccountNumber,
+                    },
+                    'destination': {
+                      'accountNumber': _accountNumberController.text,
+                    },
+                    'amount': amount,
+                    'fee': 0.0,
+                    'purpose': _purposeController.text,
+                    'transactionType': 'Fund Transfer',
+                    'transactionDate': FieldValue.serverTimestamp(),
+                    'status': 'completed',
+                    'channelDetails': {'channelType': 'Mobile Banking'},
                   },
-                  'destination': {
-                    'accountNumber': _accountNumberController.text,
-                  },
-                  'amount': amount,
-                  'fee': 0.0,
-                  'purpose': _purposeController.text,
-                  'transactionType': 'Fund Transfer',
-                  'transactionDate': FieldValue.serverTimestamp(),
-                  'status': 'completed',
-                  'channelDetails': {'channelType': 'Mobile Banking'},
-                });
+                );
 
                 // Navigate to receipt page
                 if (!context.mounted) return;
@@ -441,9 +498,9 @@ class _OwnAccountConfirmationPageState
                       purpose: _purposeController.text.isNotEmpty
                           ? _purposeController.text
                           : 'No purpose specified',
-                      fromAccount: widget.user!.accountNumber,
+                      fromAccount: senderAccountNumber ?? '',
                       toAccount: _accountNumberController.text,
-                      newBalance: senderNewBalance,
+                      newBalance: newSenderBalance,
                     ),
                   ),
                 );
