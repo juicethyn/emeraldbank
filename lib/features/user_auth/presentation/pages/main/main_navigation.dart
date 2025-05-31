@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:emeraldbank_mobileapp/models/user_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -20,6 +21,8 @@ class _MainNavigationState extends State<MainNavigation> {
   bool isBalanceHidden = false;
   bool isCardHidden = false;
 
+  Timer? _sessionTimer;
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -31,6 +34,79 @@ class _MainNavigationState extends State<MainNavigation> {
   void initState() {
     super.initState();
     _getCurrentUser();
+    _startSessionTimer();
+  }
+
+  void _startSessionTimer() {
+    _sessionTimer?.cancel();
+    _sessionTimer = Timer(const Duration(minutes: 1), _handleSessionTimeout);
+  }
+
+  void _resetSessionTimer() {
+    _startSessionTimer();
+  }
+
+  void _handleSessionTimeout() async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.timer_off_rounded, color: Color(0xFF06D6A0), size: 28),
+            const SizedBox(width: 8),
+            const Text(
+              'Session Timeout',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          "You've been inactive for too long.\n\nYou will be redirected to the login screen.",
+          style: TextStyle(fontSize: 16),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF06D6A0),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await FirebaseAuth.instance.signOut();
+                if (mounted) {
+                  Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+                }
+              },
+              child: const Text(
+                'OK',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _sessionTimer?.cancel();
+    super.dispose();
   }
 
   // Fetch the current user's data from Firestore
@@ -198,7 +274,18 @@ Future<void> _getCurrentUser() async {
             const SizedBox(width: 16),
           ],
         ),
-        body: _pages[_selectedIndex],
+        body: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: _resetSessionTimer,
+          onPanDown: (_) => _resetSessionTimer(),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              _resetSessionTimer();
+              return false;
+            },
+            child: _pages[_selectedIndex],
+          ),
+        ),
         bottomNavigationBar: BottomNavigationBar(
           backgroundColor: isDarkMode ? Color(0xFF181818) : Colors.white,
           type: BottomNavigationBarType.fixed,
